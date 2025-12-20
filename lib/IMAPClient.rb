@@ -1,8 +1,8 @@
 # ImapClient.rb
 # ImapClient
 
-# 2013112..16, 20, 22
-# 0.1.0
+# 20190912
+# 0.1.1
 
 # Usage:
 # imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')

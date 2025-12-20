@@ -8,7 +8,7 @@
 # 1. List of search keys taken from RFC-3501 (INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1), http://tools.ietf.org/html/rfc3501.
 
 require 'String/include_patternQ'
-require 'String/to_regex'
+require 'String/to_regexp'
 
 class ImapClient
   class Search
