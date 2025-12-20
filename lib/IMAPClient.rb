@@ -1,17 +1,21 @@
 # ImapClient.rb
 # ImapClient
 
-# 20190916
-# 0.2.1
+# 20220424
+# 0.3.0
 
 # Usage:
 # imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')
 # messages = imap_client.search(from: 'no_reply@example.com', subject: 'Payday Loans', seen: false)
 # imap_client.bye
 
+# Changes:
+# 1. ~ ImapClient.setup, so as to work with later Rubies.
+# 2. + ImapClient::Message#from.
+
 require 'net/imap'
 require 'Module/alias_methods'
-require_relative './ImapClient/Message'
+require 'ImapClient/Message'
 
 class ImapClient
 
@@ -19,7 +23,7 @@ class ImapClient
 
     def setup(config)
       raise unless config[:server]
-      imap_client = ImapClient.new(config)
+      imap_client = ImapClient.new(**config)
       if config[:username] && config[:password]
         imap_client.login(username: config[:username], password: config[:password])
       end

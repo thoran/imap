@@ -42,6 +42,10 @@ class ImapClient
       @subject ||= fetch_data('BODY[HEADER.FIELDS (SUBJECT)]').first.attr['BODY[HEADER.FIELDS (SUBJECT)]'].sub(/^Subject: /, '').strip
     end
 
+    def from
+      @from ||= fetch_data('BODY[HEADER.FIELDS (FROM)]').first.attr['BODY[HEADER.FIELDS (FROM)]'].sub(/^From: /, '').strip
+    end
+
     def urls
       body.scan(/https?:\/\/[\S]+/)
     end
