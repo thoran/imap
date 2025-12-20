@@ -2,9 +2,10 @@
 # ImapClient::Search
 
 # Usage:
-# ImapClient::Search.new.not.subject('Payday Loans').answered.from('no_reply@example.com').all
+# 1. ImapClient::Search.new.not.subject('Payday Loans').answered.from('noreply@example.com').all
+# 2. ImapClient::Search.new({from: 'noreply@example.com', answered: true})
 
-# Notes: 
+# Notes:
 # 1. List of search keys taken from RFC-3501 (INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1), http://tools.ietf.org/html/rfc3501.
 
 require 'String/include_patternQ'
@@ -50,7 +51,6 @@ class ImapClient
       UNKEYWORD
       UNSEEN
     }
-    LOGICAL_SEARCH_KEYS = %w{NOT OR}
     BOOLEAN_SEARCH_KEYS = %w{
       ANSWERED UNANSWERED
       DELETED UNDELETED
@@ -85,20 +85,20 @@ class ImapClient
 
     GENERAL_SEARCH_KEYS.each do |general_search_key|
       define_method general_search_key do |value|
-        criteria.merge!(general_search_key.to_sym value)
+        criteria.merge!(general_search_key.to_sym => value)
       end
     end
 
     BOOLEAN_SEARCH_KEYS.each do |boolean_search_key|
       define_method boolean_search_key do |value = true|
-        criteria.merge!(boolean_search_key.to_sym value)
+        criteria.merge!(boolean_search_key.to_sym => value)
       end
     end
 
     attr_accessor :criteria
     attr_accessor :imap_client
 
-    def initialize(criteria = nil, imap_client = nil)
+    def initialize(imap_client = nil, criteria = nil)
       @criteria = criteria || {}
       @imap_client = imap_client
     end
@@ -111,11 +111,6 @@ class ImapClient
       BOOLEAN_SEARCH_KEYS.include?(search_key)
     end
 
-    def logical_operator?(search_key)
-      logical_search_key_regexes = LOGICAL_SEARCH_KEYS.collect{|e| e.to_regex}
-      search_key.include_pattern?(*logical_search_key_regexes)
-    end
-
     def to_imap_search_keys
       criteria.inject([]) do |m, kv|
         key, value = kv.first.to_s.upcase, kv.last
@@ -123,9 +118,7 @@ class ImapClient
         when general_operator?(key)
           m << general_to_imap_search_key(key, value)
         when boolean_operator?(key)
-          m << boolean_to_imap_search_key(key)
-        when logical_operator?(key)
-          m << logical_to_imap_search_key(key, value)
+          m << boolean_to_imap_search_key(key, value)
         end
       end.flatten
     end
@@ -134,18 +127,11 @@ class ImapClient
       [key, value]
     end
 
-    def boolean_to_imap_search_key(key)
-      key
-    end
-
-    def logical_to_imap_search_key(key, value)
-      case key
-      when /NOT/
-        negated_key = key.split('_').obliterate('NOT')
-        ['NOT', negated_key, value]
-      when /OR/
-        orred_key = key.split('_').obliterate('OR')
-        ['OR', orred_key, value]
+    def boolean_to_imap_search_key(key, value)
+      if value
+        [key]
+      else
+        ['NOT', key]
       end
     end
 

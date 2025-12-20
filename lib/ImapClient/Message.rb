@@ -2,14 +2,15 @@
 # ImapClient::Message
 
 # Usage:
-# ImapClient::Message.search
-
-# Notes: 
-# 1. List of search keys taken from RFC 3501 ("INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1"), http://tools.ietf.org/html/rfc3501.
+# 1. ImapClient::Message.search(imap_client, {from: 'noreply@example.com'})
+# 2. ImapClient::Message.new(message_id, imap_client)
+# 3. ImapClient::Message.new(message_id, imap_client).body
+# 4. ImapClient::Message.new(message_id, imap_client).urls
+# 5. ImapClient::Message.new(message_id, imap_client).mark_as_read
+# 6. ImapClient::Message.new(message_id, imap_client).subject
 
 require 'Array/extract_optionsX'
-
-require_relative '../ImapClient/Search'
+require_relative './Search'
 
 class ImapClient
   class Message
@@ -18,7 +19,7 @@ class ImapClient
 
       def search(imap_client, *args)
         search_criteria = args.extract_options!
-        message_ids = ImapClient::Search.new(search_criteria, imap_client).message_ids
+        message_ids = ImapClient::Search.new(imap_client, search_criteria).message_ids
         message_ids.collect{|message_id| ImapClient::Message.new(message_id, imap_client)}
       end
       alias_method :find, :search
@@ -37,9 +38,18 @@ class ImapClient
       @body ||= fetch_data('BODY[TEXT]').first.attr['BODY[TEXT]']
     end
 
+    def subject
+      @subject ||= fetch_data('BODY[HEADER.FIELDS (SUBJECT)]').first.attr['BODY[HEADER.FIELDS (SUBJECT)]'].sub(/^Subject: /, '').strip
+    end
+
     def urls
       body.scan(/https?:\/\/[\S]+/)
     end
+
+    def mark_as_seen
+      imap_client.imap.store(@message_id, '+FLAGS', [:Seen])
+    end
+    alias_method :mark_as_read, :mark_as_seen
 
     private
 

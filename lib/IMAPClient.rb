@@ -1,8 +1,8 @@
 # ImapClient.rb
 # ImapClient
 
-# 20190912
-# 0.1.1
+# 20190916
+# 0.2.1
 
 # Usage:
 # imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')
@@ -11,8 +11,7 @@
 
 require 'net/imap'
 require 'Module/alias_methods'
-
-require_relative 'ImapClient/Message'
+require_relative './ImapClient/Message'
 
 class ImapClient
 
@@ -22,7 +21,7 @@ class ImapClient
       raise unless config[:server]
       imap_client = ImapClient.new(config)
       if config[:username] && config[:password]
-        imap_client.login(config[:username], config[:password])
+        imap_client.login(username: config[:username], password: config[:password])
       end
       if config[:mailbox]
         imap_client.mailbox = config[:mailbox]
@@ -33,29 +32,28 @@ class ImapClient
   end # class << self
 
   attr_accessor :server
+  attr_accessor :ssl
   attr_accessor :username
   attr_accessor :password
+  attr_reader :mailbox
 
-  def initialize(config = {})
-    @server = config[:server]
-    @username = config[:username]
-    @password = config[:password]
-    @mailbox = config[:mailbox]
+  def initialize(server:, ssl: true, username: nil, password: nil, mailbox: 'INBOX')
+    @server = server
+    @ssl = ssl
+    @username = username
+    @password = password
+    @mailbox = mailbox
   end
 
-  def login(username = nil, password = nil)
-    username ||= self.username
-    password ||= self.password
+  def login(username: nil, password: nil)
+    username ||= @username
+    password ||= @password
     begin
       imap.login(username, password)
       true
     rescue
       false
     end
-  end
-
-  def mailbox
-    @mailbox || 'INBOX'
   end
 
   def mailbox=(mailbox)
@@ -82,7 +80,11 @@ class ImapClient
   end
 
   def imap
-    @imap ||= Net::IMAP.new(server)
+    @imap ||= Net::IMAP.new(server, ssl: @ssl)
+  end
+
+  def ssl?
+    @ssl
   end
 
 end
