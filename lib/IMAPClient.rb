@@ -1,24 +1,26 @@
-#!/usr/bin/env ruby
-# IMAPClient
+# ImapClient.rb
+# ImapClient
 
-# 20131116
-# 0.0.3
+# 2013112..16, 20, 22
+# 0.1.0
 
 # Usage:
 # imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')
-# urls = imap_client.urls(from: 'no_reply@example.com', subject: 'Payday Loans', seen: false)
+# messages = imap_client.search(from: 'no_reply@example.com', subject: 'Payday Loans', seen: false)
 # imap_client.bye
 
 require 'net/imap'
-require 'String/capture'
+require 'Module/alias_methods'
 
-class IMAPClient
+require_relative 'ImapClient/Message'
+
+class ImapClient
 
   class << self
 
     def setup(config)
       raise unless config[:server]
-      imap_client = IMAPClient.new(config)
+      imap_client = ImapClient.new(config)
       if config[:username] && config[:password]
         imap_client.login(config[:username], config[:password])
       end
@@ -61,26 +63,10 @@ class IMAPClient
     imap.select(mailbox)
   end
 
-  def find(criteria = {})
-    imap.search(to_imap_search_criteria(criteria))
+  def search(criteria = {})
+    ImapClient::Message.search(self, criteria)
   end
-  alias_method :search, :find
-
-  def urls(criteria = {})
-    message_ids = search(criteria)
-    message_ids.collect do |message_id|
-      begin
-        body = imap.fetch(message_id, 'BODY[TEXT]').first.attr['BODY[TEXT]']
-        if block_given?
-          yield body.capture(/(https?:\/\/[\S]+)/)
-        else
-          body.capture(/(https?:\/\/[\S]+)/)
-        end
-      ensure
-        imap.store(message_id, '+FLAGS', [:Seen])
-      end
-    end
-  end
+  alias_methods :messages, :find, :search
 
   def bye
     logout
@@ -95,37 +81,8 @@ class IMAPClient
     imap.disconnect
   end
 
-  private
-
   def imap
     @imap ||= Net::IMAP.new(server)
-  end
-
-  def non_boolean_search_criteria?(key)
-    %w{subject from to}.include?(key.to_s)
-  end
-
-  def boolean_search_criteria?(key)
-    %{seen deleted}.include?(key.to_s)
-  end
-
-  def to_imap_search_criteria(criteria = {})
-    criteria.inject([]) do |m,kv|
-      key = kv.first
-      value = kv.last
-      case
-      when non_boolean_search_criteria?(key)
-        m << kv.first.to_s.upcase
-        m << kv.last
-      when boolean_search_criteria?(kv.first)
-        if kv.last
-          m << kv.first.to_s.upcase
-        else
-          m << 'NOT'
-          m << kv.first.to_s.upcase
-        end
-      end
-    end
   end
 
 end
