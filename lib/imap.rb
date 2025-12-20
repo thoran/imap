@@ -1,29 +1,15 @@
-# ImapClient.rb
-# ImapClient
-
-# 20220424
-# 0.3.0
-
-# Usage:
-# imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')
-# messages = imap_client.search(from: 'no_reply@example.com', subject: 'Payday Loans', seen: false)
-# imap_client.bye
-
-# Changes:
-# 1. ~ ImapClient.setup, so as to work with later Rubies.
-# 2. + ImapClient::Message#from.
+# imap.rb
+# Imap
 
 require 'net/imap'
-require 'Module/alias_methods'
-require 'ImapClient/Message'
+require_relative './Imap/Message'
 
-class ImapClient
-
+class Imap
   class << self
 
     def setup(config)
-      raise unless config[:server]
-      imap_client = ImapClient.new(**config)
+      raise ArgumentError, "Server must be specified" unless config[:server]
+      imap_client = Imap.new(**config)
       if config[:username] && config[:password]
         imap_client.login(username: config[:username], password: config[:password])
       end
@@ -41,21 +27,13 @@ class ImapClient
   attr_accessor :password
   attr_reader :mailbox
 
-  def initialize(server:, ssl: true, username: nil, password: nil, mailbox: 'INBOX')
-    @server = server
-    @ssl = ssl
-    @username = username
-    @password = password
-    @mailbox = mailbox
-  end
-
   def login(username: nil, password: nil)
     username ||= @username
     password ||= @password
     begin
       imap.login(username, password)
       true
-    rescue
+    rescue Net::IMAP::NoResponseError, Net::IMAP::BadResponseError
       false
     end
   end
@@ -66,9 +44,10 @@ class ImapClient
   end
 
   def search(criteria = {})
-    ImapClient::Message.search(self, criteria)
+    Imap::Message.search(self, **criteria)
   end
-  alias_methods :messages, :find, :search
+  alias_method :messages, :search
+  alias_method :find, :search
 
   def bye
     logout
@@ -91,4 +70,13 @@ class ImapClient
     @ssl
   end
 
+  private
+
+  def initialize(server:, ssl: true, username: nil, password: nil, mailbox: 'INBOX')
+    @server = server
+    @ssl = ssl
+    @username = username
+    @password = password
+    @mailbox = mailbox
+  end
 end

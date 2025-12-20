@@ -1,17 +1,14 @@
-# ImapClient/Search.rb
-# ImapClient::Search
+# Imap/Search.rb
+# Imap::Search
 
 # Usage:
-# 1. ImapClient::Search.new.not.subject('Payday Loans').answered.from('noreply@example.com').all
-# 2. ImapClient::Search.new({from: 'noreply@example.com', answered: true})
+# 1. Imap::Search.new.not.subject('Payday Loans').answered.from('noreply@example.com').all
+# 2. Imap::Search.new({from: 'noreply@example.com', answered: true})
 
 # Notes:
 # 1. List of search keys taken from RFC-3501 (INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1), http://tools.ietf.org/html/rfc3501.
 
-require 'String/include_patternQ'
-require 'String/to_regexp'
-
-class ImapClient
+class Imap
   class Search
 
     ALL_SEARCH_KEYS = %w{
@@ -51,6 +48,7 @@ class ImapClient
       UNKEYWORD
       UNSEEN
     }
+
     BOOLEAN_SEARCH_KEYS = %w{
       ANSWERED UNANSWERED
       DELETED UNDELETED
@@ -61,6 +59,7 @@ class ImapClient
       RECENT
       SEEN UNSEEN
     }
+
     GENERAL_SEARCH_KEYS = %w{
       BCC
       BEFORE
@@ -81,13 +80,6 @@ class ImapClient
       TO
       UID
     }
-    #BINARY_SEARCH_KEYS = BOOLEAN_SEARCH_KEYS + GENERAL_SEARCH_KEYS
-
-    GENERAL_SEARCH_KEYS.each do |general_search_key|
-      define_method general_search_key do |value|
-        criteria.merge!(general_search_key.to_sym => value)
-      end
-    end
 
     BOOLEAN_SEARCH_KEYS.each do |boolean_search_key|
       define_method boolean_search_key do |value = true|
@@ -95,13 +87,14 @@ class ImapClient
       end
     end
 
+    GENERAL_SEARCH_KEYS.each do |general_search_key|
+      define_method general_search_key do |value|
+        criteria.merge!(general_search_key.to_sym => value)
+      end
+    end
+
     attr_accessor :criteria
     attr_accessor :imap_client
-
-    def initialize(imap_client = nil, criteria = nil)
-      @criteria = criteria || {}
-      @imap_client = imap_client
-    end
 
     def general_operator?(search_key)
       GENERAL_SEARCH_KEYS.include?(search_key)
@@ -140,5 +133,11 @@ class ImapClient
     end
     alias_method :all, :message_ids
 
+    private
+
+    def initialize(imap_client = nil, criteria = nil)
+      @criteria = criteria || {}
+      @imap_client = imap_client
+    end
   end
 end
