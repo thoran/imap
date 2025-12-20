@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # IMAPClient
 
-# 20131111
-# 0.0.1
+# 20131112
+# 0.0.2
 
 # Usage:
 # imap_client = IMAPClient.setup(server: 'mail.thoran.com', username: 'code@thoran.com', password: 'bigsecret')
@@ -11,15 +11,14 @@
 # imap_client.bye
 
 require 'net/imap'
+require 'String/capture'
 
 class IMAPClient
 
   class << self
 
     def setup(config)
-      imap_client = IMAPClient.new(config)
-      imap_client.login
-      imap_client
+      IMAPClient.new(config)
     end
 
   end # class << self
@@ -34,12 +33,15 @@ class IMAPClient
     @server = config[:server]
     @username = config[:username]
     @password = config[:password]
-    self.mailbox = config[:mailbox]
     @imap = Net::IMAP.new(server)
+    if username && password
+      login(username, password)
+      self.mailbox = config[:mailbox]
+    end
   end
 
   def login(username = nil, password = nil)
-    imap.login(username, password)
+    @imap.login(username, password)
   end
 
   def mailbox
@@ -47,8 +49,8 @@ class IMAPClient
   end
 
   def mailbox=(mailbox)
-    @mailbox = mailbox
-    imap.select(mailbox)
+    @mailbox = mailbox || self.mailbox
+    @imap.select(@mailbox)
   end
 
   def search(criteria = {})
@@ -86,25 +88,27 @@ class IMAPClient
   private
 
   def non_boolean_search_criteria?(key)
-    %w{subject from to}.include?(key)
+    %w{subject from to}.include?(key.to_s)
   end
 
   def boolean_search_criteria?(key)
-    %{seen deleted}.include?(key)
+    %{seen deleted}.include?(key.to_s)
   end
 
   def to_imap_search_criteria(criteria = {})
     criteria.inject([]) do |m,kv|
-      case 
+      key = kv.first
+      value = kv.last
+      case
       when non_boolean_search_criteria?(key)
-        m << kv.first.upcase
+        m << kv.first.to_s.upcase
         m << kv.last
       when boolean_search_criteria?(kv.first)
         if kv.last
-          m << kv.first
+          m << kv.first.to_s.upcase
         else
           m << 'NOT'
-          m << kv.first
+          m << kv.first.to_s.upcase
         end
       end
     end
