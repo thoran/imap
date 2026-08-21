@@ -26,8 +26,10 @@ Gem::Specification.new do |spec|
   spec.files = [
     'imap.gemspec',
     Dir['lib/**/*.rb'],
+    Dir['test/**/*.rb'],
+    'CHANGELOG',
+    'LICENSE',
     'README.md',
-    Dir['test/**/*.rb']
   ].flatten
   spec.require_paths = ['lib']
 end

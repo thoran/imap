@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.4.1] - 2026-08-22, + LICENSE; ~ imap.gemspec: + CHANGELOG
+- + LICENSE: the MIT text, copyright 2025-2026 thoran. The gemspec had declared MIT while the repository carried no licence text at all.
+- ~ imap.gemspec: + 'LICENSE' and 'CHANGELOG' to spec.files, neither of which the gem had been shipping.
+- ~ Imap::VERSION: /0.4.0/0.4.1/
+
 ## [0.4.0] - 2025-12-20, Cleanup for publishing.
 - /ImapClient/Imap/
 - + imap.gemspec
