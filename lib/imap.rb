@@ -3,6 +3,7 @@
 
 require 'net/imap'
 require_relative './Imap/Message'
+require_relative './Imap/VERSION'
 
 class Imap
   class << self

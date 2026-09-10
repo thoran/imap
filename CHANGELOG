@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.4.2] - 2026-09-10, ~ lib/imap.rb: + require_relative './Imap/VERSION'; + test/Imap/VERSION_test.rb
+- ~ lib/imap.rb: + `require_relative './Imap/VERSION'`, last among the requires. The file had been present and unreached, so `require 'imap'` left Imap::VERSION undefined and the gemspec was the only thing loading it.
+- + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Modelled on moby's, less the example comparing against the changelog, which was unreachable here while the file was misspelt.
+- The test loads the library rather than VERSION.rb, which is the whole of its value: run against v0.4.1 it fails with "uninitialized constant Imap::VERSION". Nine libraries were in that state and not one of them carried this test.
+- ~ Imap::VERSION: /0.4.1/0.4.2/
+
 ## [0.4.1] - 2026-08-22, + LICENSE; ~ imap.gemspec: + CHANGELOG
 - + LICENSE: the MIT text, copyright 2025-2026 thoran. The gemspec had declared MIT while the repository carried no licence text at all.
 - ~ imap.gemspec: + 'LICENSE' and 'CHANGELOG' to spec.files, neither of which the gem had been shipping.
