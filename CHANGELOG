@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.4.6] - 2026-09-17, ~ Imap::Message#body: BODY.PEEK[TEXT]; ~ Imap::Search#to_imap_search_keys: raise upon a key which is neither
+- ~ Imap::Message#body: BODY.PEEK[TEXT] for BODY[TEXT]. Reading a body set \Seen, so anything which looked at one marked it read; PEEK is the whole of the difference and the response still answers to BODY[TEXT].
+- ~ Imap::Search#to_imap_search_keys: + UnknownSearchKey where the case matched neither operator. An unrecognised key was dropped and the search ran wider than it was asked for, saying nothing.
+- ~ Imap::Message#to: [] where the envelope carries no to, which raised NoMethodError upon nil.
+- ~ test/test_helper.rb: MockIMAP answers BODY.PEEK[TEXT] with BODY[TEXT] as a server does, records the attrs fetched, and gives message 99 an envelope with no to.
+- + a test apiece: that #body peeks, that #to is empty where there is no to, and that an unknown key raises.
+- ~ Imap::VERSION: /0.4.5/0.4.6/
+
 ## [0.4.5] - 2026-09-17, + Gemfile; ~ imap.gemspec: dependencies=, - spec.date, + metadata
 - + Gemfile: source and gemspec, as switches, eodhd and moby have it, so that the dependencies are declared once in the gemspec rather than restated here to drift. bitget and coinmarketcap restate theirs and are the minority. This was the only gem here with no Gemfile at all.
 - ~ imap.gemspec: + 'Gemfile' to spec.files, which every other gem here ships.

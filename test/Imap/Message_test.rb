@@ -40,6 +40,11 @@ describe Imap::Message do
       second_call = imap_message.body
       _(first_call.object_id).must_equal second_call.object_id
     end
+
+    it 'peeks, so that reading a body does not mark it seen' do
+      imap_message.body
+      _(client.imap.fetched_attrs).must_include 'BODY.PEEK[TEXT]'
+    end
   end
 
   describe '#subject' do
@@ -73,6 +78,10 @@ describe Imap::Message do
     it 'formats addresses correctly' do
       addresses = imap_message.to
       _(addresses.first).must_equal('user@example.com')
+    end
+
+    it 'is empty where the envelope carries no to' do
+      _(Imap::Message.new(99, client).to).must_equal []
     end
   end
 

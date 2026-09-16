@@ -33,6 +33,10 @@ describe Imap::Search do
       _(keys).must_include 'SEEN'
     end
 
+    it 'raises upon a key which is neither' do
+      _{Imap::Search.new(client, bogus: 'x').to_imap_search_keys}.must_raise Imap::Search::UnknownSearchKey
+    end
+
     it 'handles multiple criteria' do
       test_search = Imap::Search.new(client, from: 'test@example.com', seen: true)
       keys = test_search.to_imap_search_keys

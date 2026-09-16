@@ -29,7 +29,7 @@ class Imap
     attr_accessor :message_id
 
     def body
-      @body ||= fetch_data('BODY[TEXT]').first.attr['BODY[TEXT]']
+      @body ||= fetch_data('BODY.PEEK[TEXT]').first.attr['BODY[TEXT]']
     end
 
     def subject
@@ -41,7 +41,7 @@ class Imap
     end
 
     def to
-      @to ||= fetch_data('ENVELOPE').first.attr['ENVELOPE'].to.map{|addr| addr.mailbox + '@' + addr.host}
+      @to ||= (fetch_data('ENVELOPE').first.attr['ENVELOPE'].to || []).map{|addr| addr.mailbox + '@' + addr.host}
     end
 
     def urls

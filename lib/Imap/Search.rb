@@ -11,6 +11,8 @@
 class Imap
   class Search
 
+    class UnknownSearchKey < ArgumentError; end
+
     ALL_SEARCH_KEYS = %w{
       ALL
       ANSWERED
@@ -112,6 +114,8 @@ class Imap
           m << general_to_imap_search_key(key, value)
         when boolean_operator?(key)
           m << boolean_to_imap_search_key(key, value)
+        else
+          raise UnknownSearchKey, "no such search key: #{key}"
         end
       end.flatten
     end
