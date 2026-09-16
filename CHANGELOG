@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.4.3] - 2026-09-17, ~ test/test_helper.rb: + require 'minitest/mock', which minitest 6 no longer brings
+- ~ test/test_helper.rb: + `require 'minitest/mock'`. 35 of the 42 tests call stub and not one of them could: the suite answered "42 runs, 7 assertions, 0 failures, 35 errors". minitest 5's autorun required minitest/mock and shipped it, so the suite ran until minitest 6 dropped both the require and the file; the same thing coinmarketcap 0.6.1 found.
+- ~ imap.gemspec: + minitest-mock as a development dependency, which minitest ~> 5.0 carried and minitest 6 does not.
+- ~ Imap::VERSION: /0.4.2/0.4.3/
+
 ## [0.4.2] - 2026-09-10, ~ lib/imap.rb: + require_relative './Imap/VERSION'; + test/Imap/VERSION_test.rb
 - ~ lib/imap.rb: + `require_relative './Imap/VERSION'`, last among the requires. The file had been present and unreached, so `require 'imap'` left Imap::VERSION undefined and the gemspec was the only thing loading it.
 - + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Modelled on moby's, less the example comparing against the changelog, which was unreachable here while the file was misspelt.

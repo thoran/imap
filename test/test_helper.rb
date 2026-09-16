@@ -1,6 +1,7 @@
 # test/test_helper.rb
 
 require 'minitest/autorun'
+require 'minitest/mock'
 require 'minitest/spec'
 require 'ostruct'
 require_relative '../lib/imap'

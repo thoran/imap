@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'net-imap', "~> 0.4"
 
   spec.add_development_dependency 'minitest', '~> 5.0'
+  spec.add_development_dependency 'minitest-mock'
   spec.add_development_dependency 'rake', '~> 13.0'
 
   spec.files = [
