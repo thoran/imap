@@ -2,11 +2,20 @@
 
 require_relative './lib/Imap/VERSION'
 
+class Gem::Specification
+  def dependencies=(gems)
+    gems.each{|gem| add_dependency(*gem)}
+  end
+
+  def development_dependencies=(gems)
+    gems.each{|gem| add_development_dependency(*gem)}
+  end
+end
+
 Gem::Specification.new do |spec|
   spec.name = 'imap'
 
   spec.version = Imap::VERSION
-  spec.date = '2025-12-20'
 
   spec.summary = "IMAP for Ruby made easy."
   spec.description = "A Ruby wrapper around Net::IMAP with an elegant DSL for searching, reading, and managing email."
@@ -18,20 +27,32 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.7'
 
-  spec.add_dependency 'net-imap', "~> 0.4"
+  spec.dependencies = [
+    ['net-imap', '~> 0.4']
+  ]
 
-  spec.add_development_dependency 'minitest', '~> 5.0'
-  spec.add_development_dependency 'minitest-mock'
-  spec.add_development_dependency 'rake', '~> 13.0'
+  spec.development_dependencies = [
+    ['minitest', '~> 5.0'],
+    'minitest-mock',
+    ['rake', '~> 13.0']
+  ]
 
   spec.files = [
     'imap.gemspec',
     Dir['lib/**/*.rb'],
     Dir['test/**/*.rb'],
     'CHANGELOG',
+    'Gemfile',
     'Rakefile',
     'LICENSE',
     'README.md',
   ].flatten
   spec.require_paths = ['lib']
+
+  spec.metadata = {
+    "bug_tracker_uri" => "https://github.com/thoran/imap/issues",
+    "changelog_uri" => "https://github.com/thoran/imap/blob/master/CHANGELOG",
+    "source_code_uri" => "https://github.com/thoran/imap",
+    "documentation_uri" => "https://github.com/thoran/imap/blob/master/README.md"
+  }
 end

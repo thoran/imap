@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.4.5] - 2026-09-17, + Gemfile; ~ imap.gemspec: dependencies=, - spec.date, + metadata
+- + Gemfile: source and gemspec, as switches, eodhd and moby have it, so that the dependencies are declared once in the gemspec rather than restated here to drift. bitget and coinmarketcap restate theirs and are the minority. This was the only gem here with no Gemfile at all.
+- ~ imap.gemspec: + 'Gemfile' to spec.files, which every other gem here ships.
+- ~ imap.gemspec: dependencies= and development_dependencies= through the Gem::Specification extension, as switches, eodhd and moby have it and as bitget, coinmarketcap and this did not. The constraints survive: the splat takes a bare string or a [name, constraint] pair alike.
+- ~ imap.gemspec: - spec.date = '2025-12-20', nine months and two versions stale, and the last one left in the estate. RubyGems answers 1980-01-02 in its place, the reproducible-build epoch, which is what coinmarketcap has carried since dropping its own at 0.6.0.
+- ~ imap.gemspec: + metadata, the four uris switches and moby declare, so that the RubyGems page links to the issues, the changelog, the source and the README. master here where moby says main, each by the branch it is on.
+- ~ Imap::VERSION: /0.4.4/0.4.5/
+
 ## [0.4.4] - 2026-09-17, + Rakefile, - test/test_all.rb
 - + Rakefile: Rake::TestTask over FileList['test/**/*_test.rb'], with libs for lib and test, and warning = true. The minimal form nine of the gems here use rather than the fuller one five use: the :spec alias and the :version task belong to the minority, and a :version task reading VERSION.rb would not have caught 0.4.1, where require 'imap' left Imap::VERSION undefined while VERSION.rb sat there defining it. rake has been a development dependency since 0.4.0 with nothing here to run.
 - - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift. 14 of the 16 gems here with a Rakefile carry no such file; switches keeps spec/all.rb because its Rakefile targets it, and bitget carries the same redundancy this removes.
