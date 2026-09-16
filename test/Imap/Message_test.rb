@@ -32,7 +32,7 @@ describe Imap::Message do
 
   describe '#body' do
     it 'returns the message body' do
-      _(imap_message.body).must_match /Mock body/
+      _(imap_message.body).must_match(/Mock body/)
     end
 
     it 'caches the result' do

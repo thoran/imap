@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
     Dir['lib/**/*.rb'],
     Dir['test/**/*.rb'],
     'CHANGELOG',
+    'Rakefile',
     'LICENSE',
     'README.md',
   ].flatten
