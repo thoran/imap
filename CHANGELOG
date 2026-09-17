@@ -2,6 +2,16 @@
 
 ## 20260917
 
+0.4.9: + imap.rb.gemspec, so that the gem resolves under both names.
+
+1. + imap.rb.gemspec: the same code published as imap.rb, which is how gems are named here: 21 carry the suffix and imap is one of the few which do not. rubygems has no notion of an alias, so the two are separate gems which must be kept at the same version by hand.
+2. It differs from imap.gemspec in the three lines measurand and namo differ in, the heading comment naming the file, the name, and the gemspec each lists among its own files. Neither ships the other.
+3. imap.rb is unregistered, so this is its first version. bitget, eodhd, measurand and webdav each had their second name join at whatever the first stood at rather than backfilling, and each did it as a patch of its own carrying nothing else.
+4. gem-publish builds and pushes each in turn, gem build and gem push taking one file apiece and gem build *.gemspec building only whichever the shell lists first.
+5. ~ Gemfile: gemspec name: 'imap', bundler refusing to choose between two gemspecs and stopping with "There are multiple gemspecs at ...". Every pair here which uses gemspec names one: webdav, measurand and eodhd each name the elder of their two, and namo, which carried both from its first release, names the bare one. imap is the elder here.
+6. ~ Imap::VERSION: /0.4.8/0.4.9/
+
+
 0.4.8: Rewrite the CHANGELOG in the standard form.
 
 1. ~ CHANGELOG: ## before each date rather than ## [version] - date, the version and its summary beneath, a blank line between that and the first item, and the items numbered rather than dashed. No item is reworded, dropped or reordered.
