@@ -1,55 +1,83 @@
-# CHANGELOG
+# imap/CHANGELOG
 
-## [0.4.7] - 2026-09-17, ~ Imap::Search: the chaining interface, which the header has documented and which has never run
-- ~ Imap::Search: the generated methods named in lower case, so that from() answers where FROM() did. All 32 were upper case, being defined straight off the key constants, and none was reachable as the header wrote it.
-- ~ Imap::Search: the generated methods return self, having returned the criteria hash, so that they chain.
-- + Imap::Search#not: applies to what follows immediately and to nothing after it. + Negated, which carries a general key's value through the hash; a boolean needs none, false already reading as NOT.
-- ~ Imap::Search#general_to_imap_search_key: ['NOT', key, value] where the value is Negated.
-- ~ Imap::Search: the Usage header takes an imap_client, without which all() has nothing to search.
-- + tests: the lower case names, that they chain, both negations, and that not applies once only.
-- ~ Imap::VERSION: /0.4.6/0.4.7/
+## 20260917
 
-## [0.4.6] - 2026-09-17, ~ Imap::Message#body: BODY.PEEK[TEXT]; ~ Imap::Search#to_imap_search_keys: raise upon a key which is neither
-- ~ Imap::Message#body: BODY.PEEK[TEXT] for BODY[TEXT]. Reading a body set \Seen, so anything which looked at one marked it read; PEEK is the whole of the difference and the response still answers to BODY[TEXT].
-- ~ Imap::Search#to_imap_search_keys: + UnknownSearchKey where the case matched neither operator. An unrecognised key was dropped and the search ran wider than it was asked for, saying nothing.
-- ~ Imap::Message#to: [] where the envelope carries no to, which raised NoMethodError upon nil.
-- ~ test/test_helper.rb: MockIMAP answers BODY.PEEK[TEXT] with BODY[TEXT] as a server does, records the attrs fetched, and gives message 99 an envelope with no to.
-- + a test apiece: that #body peeks, that #to is empty where there is no to, and that an unknown key raises.
-- ~ Imap::VERSION: /0.4.5/0.4.6/
+0.4.8: Rewrite the CHANGELOG in the standard form.
 
-## [0.4.5] - 2026-09-17, + Gemfile; ~ imap.gemspec: dependencies=, - spec.date, + metadata
-- + Gemfile: source and gemspec, as switches, eodhd and moby have it, so that the dependencies are declared once in the gemspec rather than restated here to drift. bitget and coinmarketcap restate theirs and are the minority. This was the only gem here with no Gemfile at all.
-- ~ imap.gemspec: + 'Gemfile' to spec.files, which every other gem here ships.
-- ~ imap.gemspec: dependencies= and development_dependencies= through the Gem::Specification extension, as switches, eodhd and moby have it and as bitget, coinmarketcap and this did not. The constraints survive: the splat takes a bare string or a [name, constraint] pair alike.
-- ~ imap.gemspec: - spec.date = '2025-12-20', nine months and two versions stale, and the last one left in the estate. RubyGems answers 1980-01-02 in its place, the reproducible-build epoch, which is what coinmarketcap has carried since dropping its own at 0.6.0.
-- ~ imap.gemspec: + metadata, the four uris switches and moby declare, so that the RubyGems page links to the issues, the changelog, the source and the README. master here where moby says main, each by the branch it is on.
-- ~ Imap::VERSION: /0.4.4/0.4.5/
+1. ~ CHANGELOG: ## before each date rather than ## [version] - date, the version and its summary beneath, a blank line between that and the first item, and the items numbered rather than dashed. No item is reworded, dropped or reordered.
+2. ~ CHANGELOG: the dates in basic form, 20260910 for 2026-09-10, as every other gem here writes them.
+3. ~ CHANGELOG: + the title, # imap/CHANGELOG, as coinmarketcap.rb and release-audit have it.
+4. ~ CHANGELOG: the five releases of 20260917 under one date heading, which is how the form carries more than one in a day.
+5. 9 of the 12 gems here were already in this form; imap and gate.rb were not, which leaves gate.rb.
+6. ~ Imap::VERSION: /0.4.7/0.4.8/
 
-## [0.4.4] - 2026-09-17, + Rakefile, - test/test_all.rb
-- + Rakefile: Rake::TestTask over FileList['test/**/*_test.rb'], with libs for lib and test, and warning = true. The minimal form nine of the gems here use rather than the fuller one five use: the :spec alias and the :version task belong to the minority, and a :version task reading VERSION.rb would not have caught 0.4.1, where require 'imap' left Imap::VERSION undefined while VERSION.rb sat there defining it. rake has been a development dependency since 0.4.0 with nothing here to run.
-- - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift. 14 of the 16 gems here with a Rakefile carry no such file; switches keeps spec/all.rb because its Rakefile targets it, and bitget carries the same redundancy this removes.
-- ~ test/Imap/Message_test.rb: must_match(/Mock body/) for must_match /Mock body/, the ambiguous / which warning = true reports and which is the only warning the suite raises.
-- ~ imap.gemspec: + 'Rakefile' to spec.files, as eodhd, switches and moby have.
-- ~ Imap::VERSION: /0.4.3/0.4.4/
+0.4.7: ~ Imap::Search: the chaining interface, which the header has documented and which has never run
 
-## [0.4.3] - 2026-09-17, ~ test/test_helper.rb: + require 'minitest/mock', which minitest 6 no longer brings
-- ~ test/test_helper.rb: + `require 'minitest/mock'`. 35 of the 42 tests call stub and not one of them could: the suite answered "42 runs, 7 assertions, 0 failures, 35 errors". minitest 5's autorun required minitest/mock and shipped it, so the suite ran until minitest 6 dropped both the require and the file; the same thing coinmarketcap 0.6.1 found.
-- ~ imap.gemspec: + minitest-mock as a development dependency, which minitest ~> 5.0 carried and minitest 6 does not.
-- ~ Imap::VERSION: /0.4.2/0.4.3/
+1. ~ Imap::Search: the generated methods named in lower case, so that from() answers where FROM() did. All 32 were upper case, being defined straight off the key constants, and none was reachable as the header wrote it.
+2. ~ Imap::Search: the generated methods return self, having returned the criteria hash, so that they chain.
+3. + Imap::Search#not: applies to what follows immediately and to nothing after it. + Negated, which carries a general key's value through the hash; a boolean needs none, false already reading as NOT.
+4. ~ Imap::Search#general_to_imap_search_key: ['NOT', key, value] where the value is Negated.
+5. ~ Imap::Search: the Usage header takes an imap_client, without which all() has nothing to search.
+6. + tests: the lower case names, that they chain, both negations, and that not applies once only.
+7. ~ Imap::VERSION: /0.4.6/0.4.7/
 
-## [0.4.2] - 2026-09-10, ~ lib/imap.rb: + require_relative './Imap/VERSION'; + test/Imap/VERSION_test.rb
-- ~ lib/imap.rb: + `require_relative './Imap/VERSION'`, last among the requires. The file had been present and unreached, so `require 'imap'` left Imap::VERSION undefined and the gemspec was the only thing loading it.
-- + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Modelled on moby's, less the example comparing against the changelog, which was unreachable here while the file was misspelt.
-- The test loads the library rather than VERSION.rb, which is the whole of its value: run against v0.4.1 it fails with "uninitialized constant Imap::VERSION". Nine libraries were in that state and not one of them carried this test.
-- ~ Imap::VERSION: /0.4.1/0.4.2/
+0.4.6: ~ Imap::Message#body: BODY.PEEK[TEXT]; ~ Imap::Search#to_imap_search_keys: raise upon a key which is neither
 
-## [0.4.1] - 2026-08-22, + LICENSE; ~ imap.gemspec: + CHANGELOG
-- + LICENSE: the MIT text, copyright 2025-2026 thoran. The gemspec had declared MIT while the repository carried no licence text at all.
-- ~ imap.gemspec: + 'LICENSE' and 'CHANGELOG' to spec.files, neither of which the gem had been shipping.
-- ~ Imap::VERSION: /0.4.0/0.4.1/
+1. ~ Imap::Message#body: BODY.PEEK[TEXT] for BODY[TEXT]. Reading a body set \Seen, so anything which looked at one marked it read; PEEK is the whole of the difference and the response still answers to BODY[TEXT].
+2. ~ Imap::Search#to_imap_search_keys: + UnknownSearchKey where the case matched neither operator. An unrecognised key was dropped and the search ran wider than it was asked for, saying nothing.
+3. ~ Imap::Message#to: [] where the envelope carries no to, which raised NoMethodError upon nil.
+4. ~ test/test_helper.rb: MockIMAP answers BODY.PEEK[TEXT] with BODY[TEXT] as a server does, records the attrs fetched, and gives message 99 an envelope with no to.
+5. + a test apiece: that #body peeks, that #to is empty where there is no to, and that an unknown key raises.
+6. ~ Imap::VERSION: /0.4.5/0.4.6/
 
-## [0.4.0] - 2025-12-20, Cleanup for publishing.
-- /ImapClient/Imap/
-- + imap.gemspec
-- + tests
-- + Imap::Message#to.
+0.4.5: + Gemfile; ~ imap.gemspec: dependencies=, - spec.date, + metadata
+
+1. + Gemfile: source and gemspec, as switches, eodhd and moby have it, so that the dependencies are declared once in the gemspec rather than restated here to drift. bitget and coinmarketcap restate theirs and are the minority. This was the only gem here with no Gemfile at all.
+2. ~ imap.gemspec: + 'Gemfile' to spec.files, which every other gem here ships.
+3. ~ imap.gemspec: dependencies= and development_dependencies= through the Gem::Specification extension, as switches, eodhd and moby have it and as bitget, coinmarketcap and this did not. The constraints survive: the splat takes a bare string or a [name, constraint] pair alike.
+4. ~ imap.gemspec: - spec.date = '2025-12-20', nine months and two versions stale, and the last one left in the estate. RubyGems answers 1980-01-02 in its place, the reproducible-build epoch, which is what coinmarketcap has carried since dropping its own at 0.6.0.
+5. ~ imap.gemspec: + metadata, the four uris switches and moby declare, so that the RubyGems page links to the issues, the changelog, the source and the README. master here where moby says main, each by the branch it is on.
+6. ~ Imap::VERSION: /0.4.4/0.4.5/
+
+0.4.4: + Rakefile, - test/test_all.rb
+
+1. + Rakefile: Rake::TestTask over FileList['test/**/*_test.rb'], with libs for lib and test, and warning = true. The minimal form nine of the gems here use rather than the fuller one five use: the :spec alias and the :version task belong to the minority, and a :version task reading VERSION.rb would not have caught 0.4.1, where require 'imap' left Imap::VERSION undefined while VERSION.rb sat there defining it. rake has been a development dependency since 0.4.0 with nothing here to run.
+2. - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift. 14 of the 16 gems here with a Rakefile carry no such file; switches keeps spec/all.rb because its Rakefile targets it, and bitget carries the same redundancy this removes.
+3. ~ test/Imap/Message_test.rb: must_match(/Mock body/) for must_match /Mock body/, the ambiguous / which warning = true reports and which is the only warning the suite raises.
+4. ~ imap.gemspec: + 'Rakefile' to spec.files, as eodhd, switches and moby have.
+5. ~ Imap::VERSION: /0.4.3/0.4.4/
+
+0.4.3: ~ test/test_helper.rb: + require 'minitest/mock', which minitest 6 no longer brings
+
+1. ~ test/test_helper.rb: + `require 'minitest/mock'`. 35 of the 42 tests call stub and not one of them could: the suite answered "42 runs, 7 assertions, 0 failures, 35 errors". minitest 5's autorun required minitest/mock and shipped it, so the suite ran until minitest 6 dropped both the require and the file; the same thing coinmarketcap 0.6.1 found.
+2. ~ imap.gemspec: + minitest-mock as a development dependency, which minitest ~> 5.0 carried and minitest 6 does not.
+3. ~ Imap::VERSION: /0.4.2/0.4.3/
+
+
+## 20260910
+
+0.4.2: ~ lib/imap.rb: + require_relative './Imap/VERSION'; + test/Imap/VERSION_test.rb
+
+1. ~ lib/imap.rb: + `require_relative './Imap/VERSION'`, last among the requires. The file had been present and unreached, so `require 'imap'` left Imap::VERSION undefined and the gemspec was the only thing loading it.
+2. + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Modelled on moby's, less the example comparing against the changelog, which was unreachable here while the file was misspelt.
+3. The test loads the library rather than VERSION.rb, which is the whole of its value: run against v0.4.1 it fails with "uninitialized constant Imap::VERSION". Nine libraries were in that state and not one of them carried this test.
+4. ~ Imap::VERSION: /0.4.1/0.4.2/
+
+
+## 20260822
+
+0.4.1: + LICENSE; ~ imap.gemspec: + CHANGELOG
+
+1. + LICENSE: the MIT text, copyright 2025-2026 thoran. The gemspec had declared MIT while the repository carried no licence text at all.
+2. ~ imap.gemspec: + 'LICENSE' and 'CHANGELOG' to spec.files, neither of which the gem had been shipping.
+3. ~ Imap::VERSION: /0.4.0/0.4.1/
+
+
+## 20251220
+
+0.4.0: Cleanup for publishing.
+
+1. /ImapClient/Imap/
+2. + imap.gemspec
+3. + tests
+4. + Imap::Message#to.
