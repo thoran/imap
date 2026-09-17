@@ -31,6 +31,7 @@ class MockIMAP
     [1, 2, 3]
   end
 
+  attr_reader :list_called
   attr_reader :fetched_attrs
   attr_reader :fetch_count
 
@@ -38,8 +39,17 @@ class MockIMAP
     @fetched_attrs = attrs
     @fetch_count = (@fetch_count || 0) + 1
     Array(message_ids).collect do |message_id|
-      OpenStruct.new(seqno: message_id, attr: mock_fetch_attrs(message_id, attrs))
+      Net::IMAP::FetchData.new(message_id, mock_fetch_attrs(message_id, attrs))
     end
+  end
+
+  def list(reference, pattern)
+    @list_called = true
+    [
+      OpenStruct.new(attr: [:Hasnochildren], name: 'INBOX'),
+      OpenStruct.new(attr: [:Noselect, :Haschildren], name: 'Archive'),
+      OpenStruct.new(attr: [:Hasnochildren], name: 'Archive/2026')
+    ]
   end
 
   def store(message_id, flags, values); end
@@ -67,14 +77,63 @@ class MockIMAP
       case attr
       when 'BODY[TEXT]', 'BODY.PEEK[TEXT]'
         result['BODY[TEXT]'] = "Mock body for message #{message_id}"
+      when 'BODY[]', 'BODY.PEEK[]'
+        result['BODY[]'] = "Subject: Mock Subject #{message_id}\r\n\r\nMock body for message #{message_id}"
+      when 'UID'
+        result['UID'] = 1000 + message_id
+      when 'FLAGS'
+        result['FLAGS'] = message_id == 2 ? [:Seen] : []
+      when 'INTERNALDATE'
+        result['INTERNALDATE'] = '17-Sep-2026 09:15:00 +1000'
+      when 'RFC822.SIZE'
+        result['RFC822.SIZE'] = 2048
+      when 'BODYSTRUCTURE'
+        result['BODYSTRUCTURE'] = mock_bodystructure(message_id)
       when 'ENVELOPE'
-        result['ENVELOPE'] = OpenStruct.new(
-          subject: "Mock Subject #{message_id}",
-          from: [OpenStruct.new(mailbox: 'sender', host: 'example.com')],
-          to: message_id == 99 ? nil : [OpenStruct.new(mailbox: 'user', host: 'example.com')]
-        )
+        result['ENVELOPE'] = mock_envelope(message_id)
       end
     end
     result
+  end
+
+  # Message 2 carries the encoded words, message 99 the empty envelope.
+  def mock_envelope(message_id)
+    OpenStruct.new(
+      date: 'Thu, 17 Sep 2026 09:05:00 +1000',
+      subject: message_id == 2 ? '=?UTF-8?B?UsOpc3Vtw6kgZm9yIHJldmlldw==?=' : "Mock Subject #{message_id}",
+      from: [
+        message_id == 2 ?
+          OpenStruct.new(name: '=?UTF-8?Q?Caf=C3=A9?=', mailbox: 'sender', host: 'Example.COM') :
+          OpenStruct.new(mailbox: 'sender', host: 'example.com')
+      ],
+      to: message_id == 99 ? nil : [OpenStruct.new(mailbox: 'user', host: 'example.com')],
+      cc: message_id == 99 ? nil : [OpenStruct.new(mailbox: 'copied', host: 'example.com')]
+    )
+  end
+
+  # Message 1 names its attachment in the disposition, message 2 in the content
+  # type's NAME and in an encoded word, the rest carry none.
+  def mock_bodystructure(message_id)
+    text = OpenStruct.new(media_type: 'TEXT', subtype: 'PLAIN', param: nil, disposition: nil)
+    case message_id
+    when 1
+      attachment = OpenStruct.new(
+        media_type: 'APPLICATION',
+        subtype: 'PDF',
+        param: {'NAME' => 'ignored.pdf'},
+        disposition: OpenStruct.new(dsp_type: 'ATTACHMENT', param: {'FILENAME' => 'invoice.pdf'})
+      )
+      OpenStruct.new(media_type: 'MULTIPART', subtype: 'MIXED', parts: [text, attachment])
+    when 2
+      attachment = OpenStruct.new(
+        media_type: 'APPLICATION',
+        subtype: 'PDF',
+        param: {'NAME' => '=?UTF-8?B?csOpc3Vtw6kucGRm?='},
+        disposition: nil
+      )
+      OpenStruct.new(media_type: 'MULTIPART', subtype: 'MIXED', parts: [text, attachment])
+    else
+      text
+    end
   end
 end

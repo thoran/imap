@@ -2,6 +2,20 @@
 
 ## 20260917
 
+0.7.0: ~ Imap::Message: + #uid, #flags, #seen?, #size, #received_at, #sent_at, #cc, #from_address, #from_domain, #attachment?, #attachment_filenames, #source, .decode; + Imap#mailboxes
+
+1. + Imap::Message#uid, #flags, #seen?, #size, #received_at, #sent_at, #cc, #from_address, #from_domain, #attachment?, #attachment_filenames, #source. Everything a search had to go around the gem to Net::IMAP for.
+2. ~ Imap::Message: + FETCH_ATTRIBUTES, UID FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODYSTRUCTURE, which .search asks for in the one fetch it already made. The round trip costs the same whether it asks for one of these or for all six, so it asks for all six.
+3. ~ Imap::Message: keeps the Net::IMAP::FetchData rather than its attr hash, + Imap::Message#data for the old #attrs. FetchData reads every one of these attributes itself, so #uid, #flags, #size, #envelope and #bodystructure delegate rather than index, #body and #source become #text and #message, and #received_at is Net::IMAP.decode_time's work rather than Time.parse's, the INTERNALDATE being IMAP's own date-time and not RFC 5322's. #sent_at keeps Time.parse, the envelope carrying the header as the sender wrote it. Half a dozen accessors of net-imap's were being reimplemented here a little worse.
+4. ~ Imap::Message#envelope: reads FETCH_ATTRIBUTES where a caller built the message, rather than the ENVELOPE alone, so that a message built by hand answers the same questions as a searched one for the same one round trip.
+5. + Imap::Message.decode: RFC 2047, =?charset?B?...?= and =?charset?Q?...?=, the whitespace between adjacent encoded words dropped as the RFC says. A subject or a display name in anything but ASCII arrived as its encoding and was unreadable and unsearchable both. The text as it stands where the charset is not one Ruby knows.
+6. ~ Imap::Message#subject: decoded, and the folding newlines made spaces. #from and #to likewise decode the display name.
+7. + Imap::Message#source: BODY.PEEK[] for the whole message, headers and all, for whatever wants to parse the MIME. The gem does not: that is the mail gem's work and not IMAP's, and this is the one line it needs.
+8. + Imap#mailboxes: LIST '' '*', the \Noselect containers left out, since there is no searching everywhere without first knowing where everywhere is.
+9. ~ test/test_helper.rb: MockIMAP answers with a Net::IMAP::FetchData as a server's response parses to, rather than an OpenStruct wearing seqno and attr, and answers the six attributes and LIST as a server does. Message 2 carries the encoded words and names its attachment in the content type, message 1 in the disposition, message 99 an envelope with neither to nor cc.
+10. + 20 tests: the attributes off the one fetch, both dates as Times, the decoder upon each encoding and upon a charset it cannot know, both ways an attachment is named, and the selectable mailboxes.
+11. ~ Imap::VERSION: /0.6.0/0.7.0/
+
 0.6.0: One fetch for a slice of messages rather than one per attribute per message.
 
 1. ~ Imap::Message.search: fetches the ENVELOPE for a slice of message ids and hands each Imap::Message its own, + SLICE = 200. A hundred messages cost a round trip apiece for the subject and another apiece for the from; they cost one for the hundred now, which at any real latency is the whole cost of a search.

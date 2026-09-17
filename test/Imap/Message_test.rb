@@ -109,6 +109,111 @@ describe Imap::Message do
     end
   end
 
+  describe '#uid, #flags, #seen? and #size' do
+    it 'reads what the one fetch brought back' do
+      _(imap_message.uid).must_equal 1001
+      _(imap_message.flags).must_equal []
+      _(imap_message.seen?).must_equal false
+      _(imap_message.size).must_equal 2048
+    end
+
+    it 'is seen where the flags say so' do
+      _(Imap::Message.new(2, client).seen?).must_equal true
+    end
+
+    it 'asks for them in the same fetch as the envelope' do
+      imap_message.uid
+      imap_message.subject
+      _(client.imap.fetch_count).must_equal 1
+      _(client.imap.fetched_attrs).must_equal Imap::Message::FETCH_ATTRIBUTES
+    end
+  end
+
+  describe '#received_at and #sent_at' do
+    it 'returns the internaldate as a Time, zone and all' do
+      _(imap_message.received_at).must_be_instance_of Time
+      _(imap_message.received_at.year).must_equal 2026
+      _(imap_message.received_at.utc_offset).must_equal 10 * 3600
+    end
+
+    it 'returns the envelope date as a Time' do
+      _(imap_message.sent_at).must_be_instance_of Time
+      _(imap_message.sent_at.min).must_equal 5
+    end
+  end
+
+  describe '#cc' do
+    it 'returns an array of addresses' do
+      _(imap_message.cc).must_equal ['copied@example.com']
+    end
+
+    it 'is empty where the envelope carries no cc' do
+      _(Imap::Message.new(99, client).cc).must_equal []
+    end
+  end
+
+  describe '#from_address and #from_domain' do
+    it 'drops the display name and downcases the domain' do
+      message = Imap::Message.new(2, client)
+      _(message.from).must_equal 'Café <sender@Example.COM>'
+      _(message.from_address).must_equal 'sender@Example.COM'
+      _(message.from_domain).must_equal 'example.com'
+    end
+  end
+
+  describe '.decode' do
+    it 'decodes a base64 encoded word' do
+      _(Imap::Message.decode('=?UTF-8?B?UsOpc3Vtw6k=?=')).must_equal 'Résumé'
+    end
+
+    it 'decodes a quoted-printable encoded word, underscore for space' do
+      _(Imap::Message.decode('=?UTF-8?Q?Caf=C3=A9_au_lait?=')).must_equal 'Café au lait'
+    end
+
+    it 'drops the whitespace between adjacent encoded words' do
+      _(Imap::Message.decode('=?UTF-8?Q?Caf=C3=A9?= =?UTF-8?Q?_au_lait?=')).must_equal 'Café au lait'
+    end
+
+    it 'leaves plain text alone and nil nil' do
+      _(Imap::Message.decode('Plain subject')).must_equal 'Plain subject'
+      _(Imap::Message.decode(nil)).must_be_nil
+    end
+
+    it 'returns the text where the charset is not one Ruby knows' do
+      _(Imap::Message.decode('=?NOSUCHSET?B?UsOpc3Vtw6k=?=')).must_equal 'UsOpc3Vtw6k='
+    end
+  end
+
+  describe '#subject' do
+    it 'decodes the encoded word' do
+      _(Imap::Message.new(2, client).subject).must_equal 'Résumé for review'
+    end
+  end
+
+  describe '#attachment? and #attachment_filenames' do
+    it 'names the attachment from the disposition' do
+      _(imap_message.attachment?).must_equal true
+      _(imap_message.attachment_filenames).must_equal ['invoice.pdf']
+    end
+
+    it 'falls back to the content type NAME and decodes it' do
+      _(Imap::Message.new(2, client).attachment_filenames).must_equal ['résumé.pdf']
+    end
+
+    it 'has none where the bodystructure carries none' do
+      message = Imap::Message.new(3, client)
+      _(message.attachment_filenames).must_equal []
+      _(message.attachment?).must_equal false
+    end
+  end
+
+  describe '#source' do
+    it 'peeks at the whole message, headers and all' do
+      _(imap_message.source).must_match(/\ASubject: /)
+      _(client.imap.fetched_attrs).must_include 'BODY.PEEK[]'
+    end
+  end
+
   describe '#urls' do
     it 'extracts http URLs from body' do
       imap_message.stub(:body, 'Check out http://example.com and https://test.com') do

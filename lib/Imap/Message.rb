@@ -10,13 +10,23 @@
 # 6. Imap::Message.new(message_id, imap_client).subject
 # 7. Imap::Message.new(message_id, imap_client).from
 # 8. Imap::Message.new(message_id, imap_client).to
+# 9. Imap::Message.new(message_id, imap_client).received_at
+# 10. Imap::Message.new(message_id, imap_client).attachment_filenames
+# 11. Imap::Message.new(message_id, imap_client).source
+
+require 'time'
 
 require_relative './Search'
 
 class Imap
   class Message
 
+    # What one fetch brings back, since the round trip costs the same whether it
+    # asks for one of these or for all of them.
+    FETCH_ATTRIBUTES = %w{UID FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODYSTRUCTURE}
     SLICE = 200
+    ENCODED_WORD = /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/
+
     class << self
 
       # One fetch for a slice of messages rather than one per attribute per
@@ -25,32 +35,108 @@ class Imap
       def search(imap_client, **search_criteria)
         message_ids = Imap::Search.new(imap_client, search_criteria).message_ids
         message_ids.each_slice(SLICE).flat_map do |slice|
-          imap_client.imap.fetch(slice, ['ENVELOPE']).collect do |data|
-            Imap::Message.new(data.seqno, imap_client, data.attr)
+          imap_client.imap.fetch(slice, FETCH_ATTRIBUTES).collect do |data|
+            Imap::Message.new(data.seqno, imap_client, data)
           end
         end
       end
       alias_method :find, :search
+
+      # RFC 2047: =?charset?B?base64?= and =?charset?Q?quoted-printable?=, which
+      # headers carry wherever the subject or a name is not ASCII.
+      def decode(value)
+        return nil if value.nil?
+        value.to_s.gsub(/(?<=\?=)\s+(?==\?)/, '').gsub(ENCODED_WORD){decode_word($1, $2, $3)}
+      end
+
+      private
+
+      def decode_word(charset, encoding, text)
+        bytes =
+          if encoding.upcase == 'B'
+            text.unpack1('m')
+          else
+            text.tr('_', ' ').gsub(/=([0-9A-Fa-f]{2})/){$1.hex.chr}
+          end
+        bytes.force_encoding(charset.split('*').first).encode('UTF-8', invalid: :replace, undef: :replace)
+      rescue StandardError
+        text
+      end
 
     end # class << self
 
     attr_accessor :imap_client
     attr_accessor :message_id
 
-    def body
-      @body ||= fetch_data('BODY.PEEK[TEXT]').first.attr['BODY[TEXT]']
+    def uid
+      data.uid
+    end
+
+    def flags
+      data.flags || []
+    end
+
+    def seen?
+      flags.include?(:Seen)
+    end
+
+    def size
+      data.size.to_i
+    end
+
+    # When the server took delivery, which is what a mailbox is ordered by.
+    def received_at
+      @received_at ||= data.internaldate
+    end
+
+    # When the sender says they sent it, which is the Date header and is theirs
+    # to get wrong.  Time.parse and not Net::IMAP.decode_time: the envelope
+    # carries the RFC 5322 header, not IMAP's own date-time.
+    def sent_at
+      @sent_at ||= to_time(envelope && envelope.date)
     end
 
     def subject
-      @subject ||= envelope.subject.to_s.strip
+      @subject ||= Message.decode(envelope && envelope.subject).to_s.tr("\r\n", ' ').strip
     end
 
     def from
       @from ||= address_to_s(envelope.from && envelope.from.first)
     end
 
+    def from_address
+      @from_address ||= address_only(envelope.from && envelope.from.first)
+    end
+
+    def from_domain
+      @from_domain ||= from_address && from_address.split('@').last.to_s.downcase
+    end
+
     def to
-      @to ||= (envelope.to || []).collect{|address| address_to_s(address)}
+      @to ||= addresses(envelope.to)
+    end
+
+    def cc
+      @cc ||= addresses(envelope.cc)
+    end
+
+    # IMAP cannot search upon an attachment, but the bodystructure names them and
+    # arrives with the rest.
+    def attachment?
+      !attachment_filenames.empty?
+    end
+
+    def attachment_filenames
+      @attachment_filenames ||= filenames_in(data.bodystructure)
+    end
+
+    def body
+      @body ||= fetch_data('BODY.PEEK[TEXT]').first.text
+    end
+
+    # The whole message, headers and all, for whatever wants to parse MIME.
+    def source
+      @source ||= fetch_data('BODY.PEEK[]').first.message
     end
 
     def urls
@@ -64,25 +150,71 @@ class Imap
 
     private
 
-    def initialize(message_id = nil, imap_client = nil, attrs = nil)
+    def initialize(message_id = nil, imap_client = nil, data = nil)
       @message_id = message_id
       @imap_client = imap_client
-      @attrs = attrs
+      @data = data
     end
 
-    # Prefetched where search() built this, fetched where the caller built it.
+    # The Net::IMAP::FetchData itself rather than its attr hash, since it reads
+    # every one of these attributes already and decodes the internaldate to a
+    # Time along the way.  Prefetched where search() built this, fetched where
+    # the caller built it.
+    def data
+      @data ||= fetch_data(*FETCH_ATTRIBUTES).first
+    end
+
     def envelope
-      @envelope ||= (@attrs && @attrs['ENVELOPE']) || fetch_data('ENVELOPE').first.attr['ENVELOPE']
+      data.envelope
+    end
+
+    def to_time(value)
+      return value if value.is_a?(Time)
+      value.nil? || value.to_s.empty? ? nil : Time.parse(value.to_s)
+    rescue ArgumentError
+      nil
+    end
+
+    def addresses(list)
+      (list || []).collect{|address| address_to_s(address)}.compact
+    end
+
+    def address_only(address)
+      address && [address.mailbox, address.host].compact.join('@')
     end
 
     def address_to_s(address)
       return nil unless address
-      email = [address.mailbox, address.host].compact.join('@')
-      address.name.to_s.empty? ? email : "#{address.name} <#{email}>"
+      email = address_only(address)
+      name = Message.decode(address.name).to_s.strip
+      name.empty? ? email : "#{name} <#{email}>"
     end
 
-    def fetch_data(*attrs)
-      @fetch_data = imap_client.imap.fetch(message_id, [*attrs])
+    def filenames_in(structure)
+      return [] unless structure
+      return structure.parts.flat_map{|part| filenames_in(part)} if structure.respond_to?(:parts) && structure.parts
+      return filenames_in(structure.body) if structure.respond_to?(:body) && structure.body
+      [filename_of(structure)].compact
+    end
+
+    # The disposition names it where the sender set one, the content type's NAME
+    # where they did not.
+    def filename_of(part)
+      name = disposition_filename(part) || parameter_filename(part)
+      name.nil? || name.to_s.strip.empty? ? nil : Message.decode(name).strip
+    end
+
+    def disposition_filename(part)
+      disposition = part.respond_to?(:disposition) ? part.disposition : nil
+      disposition && disposition.param ? disposition.param['FILENAME'] : nil
+    end
+
+    def parameter_filename(part)
+      part.respond_to?(:param) && part.param ? part.param['NAME'] : nil
+    end
+
+    def fetch_data(*fetch_attributes)
+      @fetch_data = imap_client.imap.fetch(message_id, [*fetch_attributes])
     end
   end
 end

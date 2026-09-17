@@ -70,6 +70,16 @@ describe Imap do
     end
   end
 
+  describe "#mailboxes" do
+    it 'names every mailbox which can be selected' do
+      _(client.mailboxes).must_equal ['INBOX', 'Archive/2026']
+    end
+
+    it 'leaves out the \\Noselect containers' do
+      _(client.mailboxes).wont_include 'Archive'
+    end
+  end
+
   describe "#search" do
     it 'returns an array of Message objects' do
       Net::IMAP.stub(:new, MockIMAP.new('imap.example.com', ssl: true)) do

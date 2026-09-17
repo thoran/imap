@@ -44,6 +44,11 @@ class Imap
     imap.select(mailbox)
   end
 
+  # Every mailbox which can be selected, the \Noselect containers left out.
+  def mailboxes
+    (imap.list('', '*') || []).reject{|mailbox| mailbox.attr.include?(:Noselect)}.collect(&:name)
+  end
+
   def search(criteria = {})
     Imap::Message.search(self, **criteria)
   end
