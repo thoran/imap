@@ -30,6 +30,29 @@ describe Imap::Message do
     end
   end
 
+  describe '.for' do
+    it 'builds messages for ids the caller searched for itself' do
+      messages = Imap::Message.for(client, [1, 2, 3])
+      _(messages.size).must_equal 3
+      _(messages.first).must_be_instance_of Imap::Message
+      _(messages.first.subject).must_match(/Mock Subject/)
+    end
+
+    it 'fetches once for the whole slice' do
+      Imap::Message.for(client, [1, 2, 3])
+      _(client.imap.fetch_count).must_equal 1
+    end
+
+    it 'is empty where nothing was found' do
+      _(Imap::Message.for(client, [])).must_equal []
+    end
+
+    it 'gives a subclass back its own kind' do
+      hit = Class.new(Imap::Message)
+      _(hit.for(client, [1]).first).must_be_instance_of hit
+    end
+  end
+
   describe 'the batched fetch' do
     it 'fetches once for the whole slice rather than once per message' do
       messages = Imap::Message.search(client, from: 'test@example.com')

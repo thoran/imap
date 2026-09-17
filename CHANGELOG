@@ -2,6 +2,13 @@
 
 ## 20260917
 
+0.8.0: + Imap::Message.for, the fetch without the search, and a class a program can subclass.
+
+1. + Imap::Message.for(imap_client, message_ids): the batched fetch on its own, .search now being the search and then this. A program which builds its own search keys had no way in: .search couples the two, so search-mail had 159 lines of its own Hit reimplementing the fetch beside it.
+2. ~ Imap::Message.for: builds with new rather than Imap::Message.new, so that a subclass is handed back its own kind. A program which wants a message of its own, with a mailbox or a decoded body upon it, subclasses rather than starts again.
+3. + 4 tests: that .for builds for ids searched elsewhere, that it fetches once, that it is empty where nothing was found, and that a subclass gets itself back.
+4. ~ Imap::VERSION: /0.7.0/0.8.0/
+
 0.7.0: ~ Imap::Message: + #uid, #flags, #seen?, #size, #received_at, #sent_at, #cc, #from_address, #from_domain, #attachment?, #attachment_filenames, #source, .decode; + Imap#mailboxes
 
 1. + Imap::Message#uid, #flags, #seen?, #size, #received_at, #sent_at, #cc, #from_address, #from_domain, #attachment?, #attachment_filenames, #source. Everything a search had to go around the gem to Net::IMAP for.

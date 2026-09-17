@@ -3,16 +3,17 @@
 
 # Usage:
 # 1. Imap::Message.search(imap_client, {from: 'noreply@example.com'})
-# 2. Imap::Message.new(message_id, imap_client)
-# 3. Imap::Message.new(message_id, imap_client).body
-# 4. Imap::Message.new(message_id, imap_client).urls
-# 5. Imap::Message.new(message_id, imap_client).mark_as_read
-# 6. Imap::Message.new(message_id, imap_client).subject
-# 7. Imap::Message.new(message_id, imap_client).from
-# 8. Imap::Message.new(message_id, imap_client).to
-# 9. Imap::Message.new(message_id, imap_client).received_at
-# 10. Imap::Message.new(message_id, imap_client).attachment_filenames
-# 11. Imap::Message.new(message_id, imap_client).source
+# 2. Imap::Message.for(imap_client, imap_client.imap.search(['ALL']))
+# 3. Imap::Message.new(message_id, imap_client)
+# 4. Imap::Message.new(message_id, imap_client).body
+# 5. Imap::Message.new(message_id, imap_client).urls
+# 6. Imap::Message.new(message_id, imap_client).mark_as_read
+# 7. Imap::Message.new(message_id, imap_client).subject
+# 8. Imap::Message.new(message_id, imap_client).from
+# 9. Imap::Message.new(message_id, imap_client).to
+# 10. Imap::Message.new(message_id, imap_client).received_at
+# 11. Imap::Message.new(message_id, imap_client).attachment_filenames
+# 12. Imap::Message.new(message_id, imap_client).source
 
 require 'time'
 
@@ -29,18 +30,23 @@ class Imap
 
     class << self
 
+      def search(imap_client, **search_criteria)
+        self.for(imap_client, Imap::Search.new(imap_client, search_criteria).message_ids)
+      end
+      alias_method :find, :search
+
       # One fetch for a slice of messages rather than one per attribute per
       # message.  A hundred messages cost a round trip apiece for the subject and
       # another apiece for the from; they cost one for the hundred now.
-      def search(imap_client, **search_criteria)
-        message_ids = Imap::Search.new(imap_client, search_criteria).message_ids
+      #
+      # new and not Imap::Message.new, so that a subclass gets its own kind back.
+      def for(imap_client, message_ids)
         message_ids.each_slice(SLICE).flat_map do |slice|
           imap_client.imap.fetch(slice, FETCH_ATTRIBUTES).collect do |data|
-            Imap::Message.new(data.seqno, imap_client, data)
+            new(data.seqno, imap_client, data)
           end
         end
       end
-      alias_method :find, :search
 
       # RFC 2047: =?charset?B?base64?= and =?charset?Q?quoted-printable?=, which
       # headers carry wherever the subject or a name is not ASCII.
