@@ -30,6 +30,30 @@ describe Imap::Message do
     end
   end
 
+  describe 'the batched fetch' do
+    it 'fetches once for the whole slice rather than once per message' do
+      messages = Imap::Message.search(client, from: 'test@example.com')
+      _(messages.size).must_equal 3
+      _(client.imap.fetch_count).must_equal 1
+    end
+
+    it 'reads the prefetched envelope rather than fetching again' do
+      message = Imap::Message.search(client, from: 'test@example.com').first
+      before = client.imap.fetch_count
+      message.subject
+      message.from
+      message.to
+      _(client.imap.fetch_count).must_equal before
+    end
+
+    it 'still fetches for a message the caller built' do
+      message = Imap::Message.new(1, client)
+      before = client.imap.fetch_count.to_i
+      message.subject
+      _(client.imap.fetch_count).must_equal before + 1
+    end
+  end
+
   describe '#body' do
     it 'returns the message body' do
       _(imap_message.body).must_match(/Mock body/)

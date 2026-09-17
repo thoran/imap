@@ -2,6 +2,16 @@
 
 ## 20260917
 
+0.6.0: One fetch for a slice of messages rather than one per attribute per message.
+
+1. ~ Imap::Message.search: fetches the ENVELOPE for a slice of message ids and hands each Imap::Message its own, + SLICE = 200. A hundred messages cost a round trip apiece for the subject and another apiece for the from; they cost one for the hundred now, which at any real latency is the whole cost of a search.
+2. ~ Imap::Message#initialize: + attrs, which search() supplies and a caller need not. + Imap::Message#envelope, which reads what was prefetched or fetches where there is none, so a message built by hand behaves as before.
+3. ~ Imap::Message#subject, #from, #to: read from the envelope rather than fetching a header apiece. #from answers 'name <mailbox@host>' where the envelope names one, and the bare address where it does not, having answered the raw From header.
+4. ~ Imap::Message#body: unchanged and still lazy, a body being the one thing worth not fetching until it is wanted.
+5. ~ test/test_helper.rb: MockIMAP#fetch takes a list as a server does, answers with a seqno apiece, and counts its calls. Its envelope carries a subject and a from; the two BODY[HEADER.FIELDS] cases went with the code that asked for them.
+6. + tests: that a search of three fetches once, that the prefetched envelope is not fetched again, and that a message built by hand still fetches.
+7. ~ Imap::VERSION: /0.5.0/0.6.0/
+
 0.5.0: + OR and NOT to the criteria, and HEADER given its field
 
 1. + Imap::Search#any_of: or: [{from: 'a@x'}, {to: 'b@y'}]. OR takes two keys and no more, so three or more nest, OR OR a b c, as the server reads them. Each side is a criteria hash of its own and may nest further.

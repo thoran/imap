@@ -32,10 +32,14 @@ class MockIMAP
   end
 
   attr_reader :fetched_attrs
+  attr_reader :fetch_count
 
-  def fetch(message_id, attrs)
+  def fetch(message_ids, attrs)
     @fetched_attrs = attrs
-    [OpenStruct.new(attr: mock_fetch_attrs(message_id, attrs))]
+    @fetch_count = (@fetch_count || 0) + 1
+    Array(message_ids).collect do |message_id|
+      OpenStruct.new(seqno: message_id, attr: mock_fetch_attrs(message_id, attrs))
+    end
   end
 
   def store(message_id, flags, values); end
@@ -63,12 +67,10 @@ class MockIMAP
       case attr
       when 'BODY[TEXT]', 'BODY.PEEK[TEXT]'
         result['BODY[TEXT]'] = "Mock body for message #{message_id}"
-      when 'BODY[HEADER.FIELDS (SUBJECT)]'
-        result['BODY[HEADER.FIELDS (SUBJECT)]'] = "Subject: Mock Subject #{message_id}\r\n"
-      when 'BODY[HEADER.FIELDS (FROM)]'
-        result['BODY[HEADER.FIELDS (FROM)]'] = "From: sender@example.com\r\n"
       when 'ENVELOPE'
         result['ENVELOPE'] = OpenStruct.new(
+          subject: "Mock Subject #{message_id}",
+          from: [OpenStruct.new(mailbox: 'sender', host: 'example.com')],
           to: message_id == 99 ? nil : [OpenStruct.new(mailbox: 'user', host: 'example.com')]
         )
       end
