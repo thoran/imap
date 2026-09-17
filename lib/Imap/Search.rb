@@ -2,8 +2,8 @@
 # Imap::Search
 
 # Usage:
-# 1. Imap::Search.new.not.subject('Payday Loans').answered.from('noreply@example.com').all
-# 2. Imap::Search.new({from: 'noreply@example.com', answered: true})
+# 1. Imap::Search.new(imap_client).not.subject('Payday Loans').answered.from('noreply@example.com').all
+# 2. Imap::Search.new(imap_client, {from: 'noreply@example.com', answered: true})
 
 # Notes:
 # 1. List of search keys taken from RFC-3501 (INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1), http://tools.ietf.org/html/rfc3501.
@@ -12,6 +12,11 @@ class Imap
   class Search
 
     class UnknownSearchKey < ArgumentError; end
+
+    # A general key carries its value; negating one has to carry both, the hash
+    # having nowhere else to put it.  A boolean key needs none of this: false
+    # already reads as NOT.
+    Negated = Struct.new(:value)
 
     ALL_SEARCH_KEYS = %w{
       ALL
@@ -84,15 +89,23 @@ class Imap
     }
 
     BOOLEAN_SEARCH_KEYS.each do |boolean_search_key|
-      define_method boolean_search_key do |value = true|
-        criteria.merge!(boolean_search_key.to_sym => value)
+      define_method boolean_search_key.downcase do |value = true|
+        criteria.merge!(boolean_search_key.to_sym => negating? ? !value : value)
+        self
       end
     end
 
     GENERAL_SEARCH_KEYS.each do |general_search_key|
-      define_method general_search_key do |value|
-        criteria.merge!(general_search_key.to_sym => value)
+      define_method general_search_key.downcase do |value|
+        criteria.merge!(general_search_key.to_sym => negating? ? Negated.new(value) : value)
+        self
       end
+    end
+
+    # Applies to what follows immediately, and to nothing after that.
+    def not
+      @negate = true
+      self
     end
 
     attr_accessor :criteria
@@ -121,7 +134,7 @@ class Imap
     end
 
     def general_to_imap_search_key(key, value)
-      [key, value]
+      value.is_a?(Negated) ? ['NOT', key, value.value] : [key, value]
     end
 
     def boolean_to_imap_search_key(key, value)
@@ -130,6 +143,12 @@ class Imap
       else
         ['NOT', key]
       end
+    end
+
+    def negating?
+      negate = @negate
+      @negate = false
+      negate
     end
 
     def message_ids

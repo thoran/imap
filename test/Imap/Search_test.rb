@@ -44,6 +44,30 @@ describe Imap::Search do
     end
   end
 
+  describe 'the chaining interface' do
+    it 'names the keys in lower case' do
+      _(Imap::Search.new(client).from('x@y.com').criteria).must_equal({FROM: 'x@y.com'})
+    end
+
+    it 'returns itself, so that it chains' do
+      search = Imap::Search.new(client)
+      _(search.from('x@y.com')).must_be_same_as search
+    end
+
+    it 'negates a general key' do
+      _(Imap::Search.new(client).not.subject('Payday Loans').to_imap_search_keys).must_equal ['NOT', 'SUBJECT', 'Payday Loans']
+    end
+
+    it 'negates a boolean key' do
+      _(Imap::Search.new(client).not.seen.to_imap_search_keys).must_equal ['NOT', 'SEEN']
+    end
+
+    it 'negates what follows immediately and nothing after it' do
+      keys = Imap::Search.new(client).not.subject('Payday Loans').answered.from('noreply@example.com').to_imap_search_keys
+      _(keys).must_equal ['NOT', 'SUBJECT', 'Payday Loans', 'ANSWERED', 'FROM', 'noreply@example.com']
+    end
+  end
+
   describe '#message_ids' do
     it 'returns an array of message IDs' do
       ids = search.message_ids

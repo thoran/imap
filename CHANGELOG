@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.4.7] - 2026-09-17, ~ Imap::Search: the chaining interface, which the header has documented and which has never run
+- ~ Imap::Search: the generated methods named in lower case, so that from() answers where FROM() did. All 32 were upper case, being defined straight off the key constants, and none was reachable as the header wrote it.
+- ~ Imap::Search: the generated methods return self, having returned the criteria hash, so that they chain.
+- + Imap::Search#not: applies to what follows immediately and to nothing after it. + Negated, which carries a general key's value through the hash; a boolean needs none, false already reading as NOT.
+- ~ Imap::Search#general_to_imap_search_key: ['NOT', key, value] where the value is Negated.
+- ~ Imap::Search: the Usage header takes an imap_client, without which all() has nothing to search.
+- + tests: the lower case names, that they chain, both negations, and that not applies once only.
+- ~ Imap::VERSION: /0.4.6/0.4.7/
+
 ## [0.4.6] - 2026-09-17, ~ Imap::Message#body: BODY.PEEK[TEXT]; ~ Imap::Search#to_imap_search_keys: raise upon a key which is neither
 - ~ Imap::Message#body: BODY.PEEK[TEXT] for BODY[TEXT]. Reading a body set \Seen, so anything which looked at one marked it read; PEEK is the whole of the difference and the response still answers to BODY[TEXT].
 - ~ Imap::Search#to_imap_search_keys: + UnknownSearchKey where the case matched neither operator. An unrecognised key was dropped and the search ran wider than it was asked for, saying nothing.
