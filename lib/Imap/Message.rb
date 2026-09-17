@@ -29,7 +29,6 @@ class Imap
     ENCODED_WORD = /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/
 
     class << self
-
       def search(imap_client, **search_criteria)
         self.for(imap_client, Imap::Search.new(imap_client, search_criteria).message_ids)
       end
@@ -68,7 +67,6 @@ class Imap
       rescue StandardError
         text
       end
-
     end # class << self
 
     attr_accessor :imap_client

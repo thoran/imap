@@ -47,6 +47,27 @@ describe Imap::Search do
   describe 'OR, NOT and HEADER' do
     def keys(criteria) = Imap::Search.new(client, criteria).to_imap_search_keys
 
+    it 'answers ALL, which every key list named and neither operator list held' do
+      _(keys(all: true)).must_equal ['ALL']
+    end
+
+    it 'ands a list of criteria hashes for ALL_OF' do
+      _(keys(all_of: [{text: 'invoice'}, {text: 'overdue'}])).must_equal ['TEXT', 'invoice', 'TEXT', 'overdue']
+    end
+
+    it 'is how the one key carries more than one term, a hash holding it once' do
+      _(keys({text: 'invoice'}.merge(text: 'overdue'))).must_equal ['TEXT', 'overdue']
+      _(keys(all_of: [{text: 'invoice'}, {text: 'overdue'}])).must_equal ['TEXT', 'invoice', 'TEXT', 'overdue']
+    end
+
+    it 'nests OR and NOT inside ALL_OF' do
+      _(keys(all_of: [{not: {text: 'draft'}}, {or: [{from: 'a@x'}, {to: 'b@y'}]}])).must_equal ['NOT', 'TEXT', 'draft', 'OR', 'FROM', 'a@x', 'TO', 'b@y']
+    end
+
+    it 'sits beside the plain keys' do
+      _(keys(since: '1-Sep-2026', all_of: [{text: 'a'}, {text: 'b'}])).must_equal ['SINCE', '1-Sep-2026', 'TEXT', 'a', 'TEXT', 'b']
+    end
+
     it 'takes two criteria hashes for OR' do
       _(keys(or: [{from: 'a@x'}, {to: 'b@y'}])).must_equal ['OR', 'FROM', 'a@x', 'TO', 'b@y']
     end

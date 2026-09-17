@@ -4,6 +4,7 @@
 # Usage:
 # 1. Imap::Search.new(imap_client).not.subject('Payday Loans').answered.from('noreply@example.com').all
 # 2. Imap::Search.new(imap_client, {from: 'noreply@example.com', answered: true})
+# 3. Imap::Search.new(imap_client, {all_of: [{text: 'invoice'}, {text: 'overdue'}]})
 
 # Notes:
 # 1. List of search keys taken from RFC-3501 (INTERNET MESSAGE ACCESS PROTOCOL - VERSION 4rev1), http://tools.ietf.org/html/rfc3501.
@@ -123,6 +124,10 @@ class Imap
       criteria.inject([]) do |m, kv|
         key, value = kv.first.to_s.upcase, kv.last
         case
+        when key == 'ALL'
+          m << 'ALL'
+        when key == 'ALL_OF'
+          m << all_of(value)
         when key == 'OR'
           m << any_of(value)
         when key == 'NOT'
@@ -135,6 +140,13 @@ class Imap
           raise UnknownSearchKey, "no such search key: #{key}"
         end
       end.flatten
+    end
+
+    # AND has no keyword: keys sit side by side and the server ands them.  A hash
+    # cannot hold the same key twice, though, so several terms upon the one key
+    # say so here: all_of: [{text: 'a'}, {text: 'b'}] for TEXT a TEXT b.
+    def all_of(criteria_hashes)
+      criteria_hashes.flat_map{|criteria_hash| Search.new(nil, criteria_hash).to_imap_search_keys}
     end
 
     # OR takes two keys and no more, so three criteria nest: OR OR a b c.  Each

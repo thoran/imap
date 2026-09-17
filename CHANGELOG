@@ -2,6 +2,15 @@
 
 ## 20260917
 
+0.9.0: + all_of and ALL
+
+1. + Imap::Search#all_of: all_of: [{text: 'invoice'}, {text: 'overdue'}] for TEXT invoice TEXT overdue. IMAP has no AND keyword, keys simply sitting side by side, but a hash cannot hold the same key twice, so two terms upon the one key could not be asked for at all: {text: 'a', text: 'b'} keeps b and drops a without a word. Each element is a criteria hash of its own, so or and not nest inside it.
+2. ~ Imap::Search#to_imap_search_keys: + ALL_OF and + ALL, read before the operator tests beside OR and NOT, being none of the three. ALL sat in ALL_SEARCH_KEYS and in neither operator list, so {all: true} raised UnknownSearchKey. It is the key meaning every message, which is precisely what a search with no criteria has to send, so the hash could not express the simplest search there is.
+3. ALL is a case and not a member of BOOLEAN_SEARCH_KEYS, where it appears to belong: each of those defines a method of its own name, and #all is already the alias for #message_ids which the header's own example ends upon. Adding it there redefined the alias silently, which warning = true reported and 0.4.4 turned on for this.
+4. + 5 tests: that all_of ands a list, that it is how the one key carries several terms where a hash cannot, that or and not nest within it, that it sits beside the plain keys, and that {all: true} answers ['ALL'].
+5. ~ Imap::VERSION: /0.8.0/0.9.0/
+
+
 0.8.0: + Imap::Message.for, the fetch without the search, and a class a program can subclass.
 
 1. + Imap::Message.for(imap_client, message_ids): the batched fetch on its own, .search now being the search and then this. A program which builds its own search keys had no way in: .search couples the two, so search-mail had 159 lines of its own Hit reimplementing the fetch beside it.
