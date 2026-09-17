@@ -2,6 +2,16 @@
 
 ## 20260917
 
+0.5.0: + OR and NOT to the criteria, and HEADER given its field
+
+1. + Imap::Search#any_of: or: [{from: 'a@x'}, {to: 'b@y'}]. OR takes two keys and no more, so three or more nest, OR OR a b c, as the server reads them. Each side is a criteria hash of its own and may nest further.
+2. + Imap::Search#none_of: not: {subject: 'Payday'}. NOT takes one key, so several are negated apiece, NOT a NOT b.
+3. ~ Imap::Search#to_imap_search_keys: OR and NOT read before the operator tests, being neither general nor boolean.
+4. HEADER wanted no change: an array value already flattens to ['HEADER', field, value], which nothing said and nothing tested. It is tested now.
+5. + tests for each, and for OR mixed with the plain keys.
+6. ~ Imap::VERSION: /0.4.9/0.5.0/
+
+
 0.4.9: + imap.rb.gemspec, so that the gem resolves under both names.
 
 1. + imap.rb.gemspec: the same code published as imap.rb, which is how gems are named here: 21 carry the suffix and imap is one of the few which do not. rubygems has no notion of an alias, so the two are separate gems which must be kept at the same version by hand.

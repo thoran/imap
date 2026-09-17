@@ -123,6 +123,10 @@ class Imap
       criteria.inject([]) do |m, kv|
         key, value = kv.first.to_s.upcase, kv.last
         case
+        when key == 'OR'
+          m << any_of(value)
+        when key == 'NOT'
+          m << none_of(value)
         when general_operator?(key)
           m << general_to_imap_search_key(key, value)
         when boolean_operator?(key)
@@ -131,6 +135,17 @@ class Imap
           raise UnknownSearchKey, "no such search key: #{key}"
         end
       end.flatten
+    end
+
+    # OR takes two keys and no more, so three criteria nest: OR OR a b c.  Each
+    # is a criteria hash of its own, so either side may nest further.
+    def any_of(criteria_hashes)
+      criteria_hashes.collect{|criteria_hash| Search.new(nil, criteria_hash).to_imap_search_keys}.inject{|m, keys| ['OR'] + m + keys}
+    end
+
+    # NOT takes one key, so each criterion is negated on its own: NOT a NOT b.
+    def none_of(criteria_hash)
+      criteria_hash.inject([]){|m, kv| m + ['NOT'] + Search.new(nil, Hash[*kv]).to_imap_search_keys}
     end
 
     def general_to_imap_search_key(key, value)

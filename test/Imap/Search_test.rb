@@ -44,6 +44,34 @@ describe Imap::Search do
     end
   end
 
+  describe 'OR, NOT and HEADER' do
+    def keys(criteria) = Imap::Search.new(client, criteria).to_imap_search_keys
+
+    it 'takes two criteria hashes for OR' do
+      _(keys(or: [{from: 'a@x'}, {to: 'b@y'}])).must_equal ['OR', 'FROM', 'a@x', 'TO', 'b@y']
+    end
+
+    it 'nests OR where there are more than two, it taking only two' do
+      _(keys(or: [{from: 'a@x'}, {to: 'b@y'}, {cc: 'c@z'}])).must_equal ['OR', 'OR', 'FROM', 'a@x', 'TO', 'b@y', 'CC', 'c@z']
+    end
+
+    it 'negates a criterion for NOT' do
+      _(keys(not: {subject: 'Payday'})).must_equal ['NOT', 'SUBJECT', 'Payday']
+    end
+
+    it 'negates each on its own where NOT carries more than one, it taking only one' do
+      _(keys(not: {subject: 'Payday', seen: true})).must_equal ['NOT', 'SUBJECT', 'Payday', 'NOT', 'SEEN']
+    end
+
+    it 'takes a field and a value for HEADER' do
+      _(keys(header: ['List-Id', 'announce'])).must_equal ['HEADER', 'List-Id', 'announce']
+    end
+
+    it 'mixes with the plain keys' do
+      _(keys(since: '1-Sep-2026', or: [{from: 'a@x'}, {to: 'b@y'}])).must_equal ['SINCE', '1-Sep-2026', 'OR', 'FROM', 'a@x', 'TO', 'b@y']
+    end
+  end
+
   describe 'the chaining interface' do
     it 'names the keys in lower case' do
       _(Imap::Search.new(client).from('x@y.com').criteria).must_equal({FROM: 'x@y.com'})
