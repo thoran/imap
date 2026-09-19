@@ -1,5 +1,16 @@
 # imap/CHANGELOG
 
+## 20260919
+
+0.10.0: ~ Imap.setup: + Imap::LoginFailed; ~ the gemspecs: /'~> 0.4'/'>= 0.4.5'/ upon net-imap. Imap.setup ignored the false which Imap#login returns when the server rejects the password, and handed back a client which was connected but not logged in.
+
+1. + Imap::LoginFailed
+2. + login!(): raises where the server rejects the password, and where only one of the username and the password is given.
+3. ~ Imap.setup: login!() for #login, and /&&/||/ upon the credentials.
+4. ~ imap.gemspec, imap.rb.gemspec: /'~> 0.4'/'>= 0.4.5'/ upon net-imap. FetchData#uid, #flags, #internaldate, #bodystructure and #message are absent in 0.4.0 and present in 0.4.5, and 0.7.0 reads all five. No ceiling, nothing being known to break at 1.0.
+5. + 4 tests: .setup upon a rejection, that it does not go on to select, a half-given pair, and neither given.
+6. ~ Imap::VERSION: /0.9.0/0.10.0/
+
 ## 20260917
 
 0.9.0: + all_of and ALL

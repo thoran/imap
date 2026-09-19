@@ -36,6 +36,47 @@ describe Imap do
     end
   end
 
+  describe ".setup, upon a login which does not take" do
+    def refusing_mock
+      mock = MockIMAP.new('imap.example.com', ssl: true)
+      def mock.login(username, password)
+        raise Net::IMAP::NoResponseError, OpenStruct.new(data: OpenStruct.new(text: 'Authentication failed'))
+      end
+      mock
+    end
+
+    it 'raises rather than handing back a connection which is not logged in' do
+      Net::IMAP.stub(:new, refusing_mock) do
+        error = _(proc{Imap.setup(server: 'imap.example.com', username: 'user', password: 'wrong')}).must_raise(Imap::LoginFailed)
+        _(error.message).must_equal 'imap.example.com refused user'
+      end
+    end
+
+    it 'does not go on to select a mailbox' do
+      mock = refusing_mock
+      Net::IMAP.stub(:new, mock) do
+        _(proc{Imap.setup(server: 'imap.example.com', username: 'user', password: 'wrong', mailbox: 'INBOX')}).must_raise(Imap::LoginFailed)
+      end
+      _(mock.select_called).must_equal false
+    end
+
+    it 'raises where only one of the pair is given, rather than skipping the login' do
+      Net::IMAP.stub(:new, MockIMAP.new('imap.example.com', ssl: true)) do
+        error = _(proc{Imap.setup(server: 'imap.example.com', username: 'user')}).must_raise(Imap::LoginFailed)
+        _(error.message).must_match(/only the username was given/)
+        _(proc{Imap.setup(server: 'imap.example.com', password: 'secret')}).must_raise(Imap::LoginFailed)
+      end
+    end
+
+    it 'does not log in at all where neither is given' do
+      mock = MockIMAP.new('imap.example.com', ssl: true)
+      Net::IMAP.stub(:new, mock) do
+        _(Imap.setup(server: 'imap.example.com')).must_be_instance_of Imap
+      end
+      _(mock.login_called).must_equal false
+    end
+  end
+
   describe "#login" do
     it 'returns true on successful login' do
       Net::IMAP.stub(:new, MockIMAP.new('imap.example.com', ssl: true)) do

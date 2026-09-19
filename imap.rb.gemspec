@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.7'
 
   spec.dependencies = [
-    ['net-imap', '~> 0.4']
+    ['net-imap', '>= 0.4.5']
   ]
 
   spec.development_dependencies = [
