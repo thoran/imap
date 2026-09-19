@@ -2,6 +2,17 @@
 
 ## 20260919
 
+0.11.0: ~ README.md: rewritten for the surface as it now stands; ~ the gemspecs: /['minitest', '~> 5.0']/'minitest'/, /['rake', '~> 13.0']/'rake'/. The README documented 0.4, five minors back, and the minitest line permitted only versions the suite no longer runs on.
+
+1. ~ README.md: + the searching, or, not, all_of, header and UnknownSearchKey; + the message accessors, all of them off the one fetch; + .for, .decode, #mailboxes, #source, LoginFailed, and subclassing. Every example run against the suite's mock rather than written from memory.
+2. ~ README.md: + that the gem is published under both names and that one installs one of them.
+3. ~ the gemspecs: /['minitest', '~> 5.0']/'minitest'/. The suite has run on minitest 6 since 0.4.3, which is where it gained require 'minitest/mock'; the line permitted 5.x alone.
+4. ~ the gemspecs: /['rake', '~> 13.0']/'rake'/, nothing being known to break outside it.
+5. ~ CHANGELOG: - the names of other programs and gems throughout. A reader has this repository and no other, so a comparison against software they cannot see is not evidence to them.
+6. ~ CHANGELOG: - the 6 items which recorded no change, the numbering closed up behind them.
+7. ~ Imap::VERSION: /0.10.0/0.11.0/
+
+
 0.10.0: ~ Imap.setup: + Imap::LoginFailed; ~ the gemspecs: /'~> 0.4'/'>= 0.4.5'/ upon net-imap. Imap.setup ignored the false which Imap#login returns when the server rejects the password, and handed back a client which was connected but not logged in.
 
 1. + Imap::LoginFailed
@@ -17,14 +28,13 @@
 
 1. + Imap::Search#all_of: all_of: [{text: 'invoice'}, {text: 'overdue'}] for TEXT invoice TEXT overdue. IMAP has no AND keyword, keys simply sitting side by side, but a hash cannot hold the same key twice, so two terms upon the one key could not be asked for at all: {text: 'a', text: 'b'} keeps b and drops a without a word. Each element is a criteria hash of its own, so or and not nest inside it.
 2. ~ Imap::Search#to_imap_search_keys: + ALL_OF and + ALL, read before the operator tests beside OR and NOT, being none of the three. ALL sat in ALL_SEARCH_KEYS and in neither operator list, so {all: true} raised UnknownSearchKey. It is the key meaning every message, which is precisely what a search with no criteria has to send, so the hash could not express the simplest search there is.
-3. ALL is a case and not a member of BOOLEAN_SEARCH_KEYS, where it appears to belong: each of those defines a method of its own name, and #all is already the alias for #message_ids which the header's own example ends upon. Adding it there redefined the alias silently, which warning = true reported and 0.4.4 turned on for this.
-4. + 5 tests: that all_of ands a list, that it is how the one key carries several terms where a hash cannot, that or and not nest within it, that it sits beside the plain keys, and that {all: true} answers ['ALL'].
-5. ~ Imap::VERSION: /0.8.0/0.9.0/
+3. + 5 tests: that all_of ands a list, that it is how the one key carries several terms where a hash cannot, that or and not nest within it, that it sits beside the plain keys, and that {all: true} answers ['ALL'].
+4. ~ Imap::VERSION: /0.8.0/0.9.0/
 
 
 0.8.0: + Imap::Message.for, the fetch without the search, and a class a program can subclass.
 
-1. + Imap::Message.for(imap_client, message_ids): the batched fetch on its own, .search now being the search and then this. A program which builds its own search keys had no way in: .search couples the two, so search-mail had 159 lines of its own Hit reimplementing the fetch beside it.
+1. + Imap::Message.for(imap_client, message_ids): the batched fetch on its own, .search now being the search and then this. A program which builds its own search keys had no way in, .search coupling the two, and had to reimplement the fetch beside it.
 2. ~ Imap::Message.for: builds with new rather than Imap::Message.new, so that a subclass is handed back its own kind. A program which wants a message of its own, with a mailbox or a decoded body upon it, subclasses rather than starts again.
 3. + 4 tests: that .for builds for ids searched elsewhere, that it fetches once, that it is empty where nothing was found, and that a subclass gets itself back.
 4. ~ Imap::VERSION: /0.7.0/0.8.0/
@@ -58,29 +68,24 @@
 1. + Imap::Search#any_of: or: [{from: 'a@x'}, {to: 'b@y'}]. OR takes two keys and no more, so three or more nest, OR OR a b c, as the server reads them. Each side is a criteria hash of its own and may nest further.
 2. + Imap::Search#none_of: not: {subject: 'Payday'}. NOT takes one key, so several are negated apiece, NOT a NOT b.
 3. ~ Imap::Search#to_imap_search_keys: OR and NOT read before the operator tests, being neither general nor boolean.
-4. HEADER wanted no change: an array value already flattens to ['HEADER', field, value], which nothing said and nothing tested. It is tested now.
-5. + tests for each, and for OR mixed with the plain keys.
-6. ~ Imap::VERSION: /0.4.9/0.5.0/
+4. + tests for each, and for OR mixed with the plain keys.
+5. ~ Imap::VERSION: /0.4.9/0.5.0/
 
 
 0.4.9: + imap.rb.gemspec, so that the gem resolves under both names.
 
 1. + imap.rb.gemspec: the same code published as imap.rb, which is how gems are named here: 21 carry the suffix and imap is one of the few which do not. rubygems has no notion of an alias, so the two are separate gems which must be kept at the same version by hand.
-2. It differs from imap.gemspec in the three lines measurand and namo differ in, the heading comment naming the file, the name, and the gemspec each lists among its own files. Neither ships the other.
-3. imap.rb is unregistered, so this is its first version. bitget, eodhd, measurand and webdav each had their second name join at whatever the first stood at rather than backfilling, and each did it as a patch of its own carrying nothing else.
-4. gem-publish builds and pushes each in turn, gem build and gem push taking one file apiece and gem build *.gemspec building only whichever the shell lists first.
-5. ~ Gemfile: gemspec name: 'imap', bundler refusing to choose between two gemspecs and stopping with "There are multiple gemspecs at ...". Every pair here which uses gemspec names one: webdav, measurand and eodhd each name the elder of their two, and namo, which carried both from its first release, names the bare one. imap is the elder here.
-6. ~ Imap::VERSION: /0.4.8/0.4.9/
+2. ~ Gemfile: gemspec name: 'imap', bundler refusing to choose between two gemspecs and stopping with "There are multiple gemspecs at ...". imap is the elder of the two names.
+3. ~ Imap::VERSION: /0.4.8/0.4.9/
 
 
 0.4.8: Rewrite the CHANGELOG in the standard form.
 
 1. ~ CHANGELOG: ## before each date rather than ## [version] - date, the version and its summary beneath, a blank line between that and the first item, and the items numbered rather than dashed. No item is reworded, dropped or reordered.
 2. ~ CHANGELOG: the dates in basic form, 20260910 for 2026-09-10, as every other gem here writes them.
-3. ~ CHANGELOG: + the title, # imap/CHANGELOG, as coinmarketcap.rb and release-audit have it.
+3. ~ CHANGELOG: + the title, # imap/CHANGELOG.
 4. ~ CHANGELOG: the five releases of 20260917 under one date heading, which is how the form carries more than one in a day.
-5. 9 of the 12 gems here were already in this form; imap and gate.rb were not, which leaves gate.rb.
-6. ~ Imap::VERSION: /0.4.7/0.4.8/
+5. ~ Imap::VERSION: /0.4.7/0.4.8/
 
 0.4.7: ~ Imap::Search: the chaining interface, which the header has documented and which has never run
 
@@ -103,24 +108,24 @@
 
 0.4.5: + Gemfile; ~ imap.gemspec: dependencies=, - spec.date, + metadata
 
-1. + Gemfile: source and gemspec, as switches, eodhd and moby have it, so that the dependencies are declared once in the gemspec rather than restated here to drift. bitget and coinmarketcap restate theirs and are the minority. This was the only gem here with no Gemfile at all.
-2. ~ imap.gemspec: + 'Gemfile' to spec.files, which every other gem here ships.
-3. ~ imap.gemspec: dependencies= and development_dependencies= through the Gem::Specification extension, as switches, eodhd and moby have it and as bitget, coinmarketcap and this did not. The constraints survive: the splat takes a bare string or a [name, constraint] pair alike.
-4. ~ imap.gemspec: - spec.date = '2025-12-20', nine months and two versions stale, and the last one left in the estate. RubyGems answers 1980-01-02 in its place, the reproducible-build epoch, which is what coinmarketcap has carried since dropping its own at 0.6.0.
-5. ~ imap.gemspec: + metadata, the four uris switches and moby declare, so that the RubyGems page links to the issues, the changelog, the source and the README. master here where moby says main, each by the branch it is on.
+1. + Gemfile: source and gemspec, so that the dependencies are declared once in the gemspec rather than restated here to drift.
+2. ~ imap.gemspec: + 'Gemfile' to spec.files.
+3. ~ imap.gemspec: dependencies= and development_dependencies= through the Gem::Specification extension. The constraints survive: the splat takes a bare string or a [name, constraint] pair alike.
+4. ~ imap.gemspec: - spec.date = '2025-12-20', nine months and two versions stale. RubyGems answers 1980-01-02 in its place, the reproducible-build epoch.
+5. ~ imap.gemspec: + metadata, the four uris, so that the RubyGems page links to the issues, the changelog, the source and the README.
 6. ~ Imap::VERSION: /0.4.4/0.4.5/
 
 0.4.4: + Rakefile, - test/test_all.rb
 
 1. + Rakefile: Rake::TestTask over FileList['test/**/*_test.rb'], with libs for lib and test, and warning = true. The minimal form nine of the gems here use rather than the fuller one five use: the :spec alias and the :version task belong to the minority, and a :version task reading VERSION.rb would not have caught 0.4.1, where require 'imap' left Imap::VERSION undefined while VERSION.rb sat there defining it. rake has been a development dependency since 0.4.0 with nothing here to run.
-2. - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift. 14 of the 16 gems here with a Rakefile carry no such file; switches keeps spec/all.rb because its Rakefile targets it, and bitget carries the same redundancy this removes.
+2. - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift.
 3. ~ test/Imap/Message_test.rb: must_match(/Mock body/) for must_match /Mock body/, the ambiguous / which warning = true reports and which is the only warning the suite raises.
-4. ~ imap.gemspec: + 'Rakefile' to spec.files, as eodhd, switches and moby have.
+4. ~ imap.gemspec: + 'Rakefile' to spec.files.
 5. ~ Imap::VERSION: /0.4.3/0.4.4/
 
 0.4.3: ~ test/test_helper.rb: + require 'minitest/mock', which minitest 6 no longer brings
 
-1. ~ test/test_helper.rb: + `require 'minitest/mock'`. 35 of the 42 tests call stub and not one of them could: the suite answered "42 runs, 7 assertions, 0 failures, 35 errors". minitest 5's autorun required minitest/mock and shipped it, so the suite ran until minitest 6 dropped both the require and the file; the same thing coinmarketcap 0.6.1 found.
+1. ~ test/test_helper.rb: + `require 'minitest/mock'`. 35 of the 42 tests call stub and not one of them could: the suite answered "42 runs, 7 assertions, 0 failures, 35 errors". minitest 5's autorun required minitest/mock and shipped it, so the suite ran until minitest 6 dropped both the require and the file.
 2. ~ imap.gemspec: + minitest-mock as a development dependency, which minitest ~> 5.0 carried and minitest 6 does not.
 3. ~ Imap::VERSION: /0.4.2/0.4.3/
 
@@ -130,9 +135,8 @@
 0.4.2: ~ lib/imap.rb: + require_relative './Imap/VERSION'; + test/Imap/VERSION_test.rb
 
 1. ~ lib/imap.rb: + `require_relative './Imap/VERSION'`, last among the requires. The file had been present and unreached, so `require 'imap'` left Imap::VERSION undefined and the gemspec was the only thing loading it.
-2. + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Modelled on moby's, less the example comparing against the changelog, which was unreachable here while the file was misspelt.
-3. The test loads the library rather than VERSION.rb, which is the whole of its value: run against v0.4.1 it fails with "uninitialized constant Imap::VERSION". Nine libraries were in that state and not one of them carried this test.
-4. ~ Imap::VERSION: /0.4.1/0.4.2/
+2. + test/Imap/VERSION_test.rb: that Imap::VERSION is a string and that it is three numbers separated by dots. Less the example comparing against the changelog, which was unreachable here while the file was misspelt.
+3. ~ Imap::VERSION: /0.4.1/0.4.2/
 
 
 ## 20260822

@@ -32,9 +32,9 @@ Gem::Specification.new do |spec|
   ]
 
   spec.development_dependencies = [
-    ['minitest', '~> 5.0'],
+    'minitest',
     'minitest-mock',
-    ['rake', '~> 13.0']
+    'rake'
   ]
 
   spec.files = [
