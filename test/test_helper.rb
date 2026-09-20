@@ -20,9 +20,12 @@ class MockIMAP
     @password = password
   end
 
+  attr_reader :selects
+
   def select(mailbox)
     @select_called = true
     @selected_mailbox = mailbox
+    (@selects ||= []) << mailbox
   end
 
   def search(criteria)

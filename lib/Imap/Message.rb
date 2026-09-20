@@ -14,6 +14,7 @@
 # 10. Imap::Message.new(message_id, imap_client).received_at
 # 11. Imap::Message.new(message_id, imap_client).attachment_filenames
 # 12. Imap::Message.new(message_id, imap_client).source
+# 13. Imap::Message.new(message_id, imap_client).mailbox
 
 require 'time'
 
@@ -71,6 +72,7 @@ class Imap
 
     attr_accessor :imap_client
     attr_accessor :message_id
+    attr_reader :mailbox
 
     def uid
       data.uid
@@ -148,16 +150,25 @@ class Imap
     end
 
     def mark_as_seen
+      select_mailbox
       imap_client.imap.store(@message_id, '+FLAGS', [:Seen])
     end
     alias_method :mark_as_read, :mark_as_seen
 
     private
 
-    def initialize(message_id = nil, imap_client = nil, data = nil)
+    def initialize(message_id = nil, imap_client = nil, data = nil, mailbox = nil)
       @message_id = message_id
       @imap_client = imap_client
       @data = data
+      @mailbox = mailbox || (imap_client && imap_client.mailbox)
+    end
+
+    # A sequence number means nothing outside the mailbox which issued it, so
+    # anything fetched after another mailbox was selected has to select back.
+    def select_mailbox
+      return unless mailbox && imap_client && imap_client.mailbox != mailbox
+      imap_client.mailbox = mailbox
     end
 
     # The Net::IMAP::FetchData itself rather than its attr hash, since it reads
@@ -218,6 +229,7 @@ class Imap
     end
 
     def fetch_data(*fetch_attributes)
+      select_mailbox
       @fetch_data = imap_client.imap.fetch(message_id, [*fetch_attributes])
     end
   end

@@ -1,5 +1,19 @@
 # imap/CHANGELOG
 
+## 20261014
+
+0.12.0: ~ Imap::Message: + #mailbox, and a select before every fetch and store. A sequence number is valid only inside the SELECT which issued it, so a message whose body was read after another mailbox had been selected read that other mailbox instead, and said nothing about it.
+
+1. + Imap::Message#mailbox, taken from the client at construction, so .search and .for hand back messages which know where they came from.
+2. + Imap::Message#select_mailbox: selects back where the client has moved on since.
+3. ~ Imap::Message#fetch_data, #mark_as_seen: select_mailbox first. #body, #source and a flag store all reached the server by sequence number and none of them checked.
+4. ~ Imap::Message#initialize: + mailbox, defaulting to the client's current one, so a message built by hand is guarded too.
+5. ~ test/Imap_test.rb --> test/imap_test.rb, the file it tests being lib/imap.rb. git mv declines a destination differing only in case, so it went by way of a third name.
+6. ~ CHANGELOG: 0.4.4's second item said test_all.rb "required './Imap_test' for a file named imap_test.rb". It required './Imap_test' for test/Imap_test.rb, which matched, and the clause is struck. What remains of that item, that test_all.rb never loaded test/Imap/VERSION_test.rb, holds.
+7. + 4 tests: that a message knows its mailbox, that a fetch selects back, that a flag store selects back, and that neither selects where the client is already there. The two which select back fail with the guard removed.
+8. ~ Imap::VERSION: /0.11.0/0.12.0/
+
+
 ## 20260919
 
 0.11.0: ~ README.md: rewritten for the surface as it now stands; ~ the gemspecs: /['minitest', '~> 5.0']/'minitest'/, /['rake', '~> 13.0']/'rake'/. The README documented 0.4, five minors back, and the minitest line permitted only versions the suite no longer runs on.
@@ -118,7 +132,7 @@
 0.4.4: + Rakefile, - test/test_all.rb
 
 1. + Rakefile: Rake::TestTask over FileList['test/**/*_test.rb'], with libs for lib and test, and warning = true. The minimal form nine of the gems here use rather than the fuller one five use: the :spec alias and the :version task belong to the minority, and a :version task reading VERSION.rb would not have caught 0.4.1, where require 'imap' left Imap::VERSION undefined while VERSION.rb sat there defining it. rake has been a development dependency since 0.4.0 with nothing here to run.
-2. - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk in two ways: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44; and it required './Imap_test' for a file named imap_test.rb, which resolved only because the filesystem is case insensitive and would not have on Linux. A glob cannot drift.
+2. - test/test_all.rb: a second entry point which the Rakefile's FileList makes redundant, and which had drifted from the files on disk: it never loaded test/Imap/VERSION_test.rb, added in 0.4.2, so it ran 42 tests where there are 44. A glob cannot drift.
 3. ~ test/Imap/Message_test.rb: must_match(/Mock body/) for must_match /Mock body/, the ambiguous / which warning = true reports and which is the only warning the suite raises.
 4. ~ imap.gemspec: + 'Rakefile' to spec.files.
 5. ~ Imap::VERSION: /0.4.3/0.4.4/

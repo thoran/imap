@@ -237,6 +237,34 @@ describe Imap::Message do
     end
   end
 
+  describe '#mailbox' do
+    it 'knows the mailbox it was built in' do
+      _(Imap::Message.for(client, [1]).first.mailbox).must_equal 'INBOX'
+    end
+
+    it 'selects back before fetching, where the client has moved on since' do
+      message = Imap::Message.for(client, [1]).first
+      client.mailbox = 'Archive/2026'
+      message.body
+      _(client.mailbox).must_equal 'INBOX'
+      _(client.imap.selects.last).must_equal 'INBOX'
+    end
+
+    it 'selects back before storing a flag' do
+      message = Imap::Message.for(client, [1]).first
+      client.mailbox = 'Archive/2026'
+      message.mark_as_seen
+      _(client.imap.selects.last).must_equal 'INBOX'
+    end
+
+    it 'does not select where the client is already there' do
+      message = Imap::Message.for(client, [1]).first
+      before = (client.imap.selects || []).length
+      message.body
+      _((client.imap.selects || []).length).must_equal before
+    end
+  end
+
   describe '#urls' do
     it 'extracts http URLs from body' do
       imap_message.stub(:body, 'Check out http://example.com and https://test.com') do
